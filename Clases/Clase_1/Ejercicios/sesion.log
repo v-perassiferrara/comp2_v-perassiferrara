@@ -1,0 +1,5 @@
+Toda la salida de este shell ahora está en sesion.log
+valen
+ls: no se puede acceder a '/no_existe': No existe el archivo o el directorio
+[?2004h]0;valen@notebook: ~/Escritorio/Computacion_II/Clases/Clase_1/Ejercicios[01;32mvalen@notebook[00m:[01;34m~/Escritorio/Computacion_II/Clases/Clase_1/Ejercicios[00m$ ^C[?2004l[?2004h[?2004l
+[?2004h]0;valen@notebook: ~/Escritorio/Computacion_II/Clases/Clase_1/Ejercicios[01;32mvalen@notebook[00m:[01;34m~/Escritorio/Computacion_II/Clases/Clase_1/Ejercicios[00m$ [?2004l[?2004h[?2004l
