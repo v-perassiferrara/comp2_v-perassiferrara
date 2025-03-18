@@ -6,3 +6,10 @@ drwxrwxr-x 3 valen valen 4096 mar 18 10:24 Clases
 drwxrwxr-x 2 valen valen 4096 mar 18 10:24 TP_1
 drwxrwxr-x 2 valen valen 4096 mar 18 10:24 TP_2
 drwxrwxr-x 2 valen valen 4096 mar 18 10:24 TRABAJO_FINAL
+aaa
+aa
+bbb
+dd
+cccc
+    fff
+eeeee
