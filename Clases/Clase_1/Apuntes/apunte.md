@@ -156,6 +156,4 @@ git push
 # Recursos Adicionales
 - [Git Documentation](https://git-scm.com/doc)
 - [GitHub SSH Guide](https://docs.github.com/es/authentication/connecting-to-github-with-ssh)
-```
 
-¡Excelente trabajo! Este resumen te servirá como referencia rápida para los conceptos clave. ¿Necesitas ajustar algo o profundizar en algún tema? 😊
