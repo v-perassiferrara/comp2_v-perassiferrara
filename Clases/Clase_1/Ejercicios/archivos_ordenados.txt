@@ -1,0 +1,8 @@
+drwxrwxr-x 2 valen valen 4096 mar 18 10:24 TP_1
+drwxrwxr-x 2 valen valen 4096 mar 18 10:24 TP_2
+drwxrwxr-x 2 valen valen 4096 mar 18 10:24 TRABAJO_FINAL
+drwxrwxr-x 3 valen valen 4096 mar 18 10:24 Clases
+-rw-rw-r-- 1 valen valen    0 mar 18 10:20 temp.txt
+-rw-rw-r-- 1 valen valen    0 mar 18 11:03 listado.txt
+-rw-rw-r-- 1 valen valen  896 mar 18 10:32 README.md
+total 20
