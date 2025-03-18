@@ -1,4 +1,3 @@
-```markdown
 # Resumen de Computación II - Control de Versiones y Fundamentos
 
 ## 1. Configuración de Git
