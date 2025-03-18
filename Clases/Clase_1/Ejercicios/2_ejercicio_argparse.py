@@ -1,11 +1,11 @@
 import argparse
 
+
 def check_positive(value):
     ivalue = int(value)
     if ivalue <= 0:
         raise argparse.ArgumentTypeError("El número de lineas debe ser entero y positivo")
     return ivalue
-
 
 
 def main():
@@ -24,28 +24,6 @@ def main():
     if args.verbose == True:
         print("Modo detallado activado")
 
-    
-
-
-
-    
-
-#Implementa un comando --help para que el usuario vea la documentación.
-
-
-
-
-
-
-
-# with open(args.file, "r") as file:
-#     lines = file.readlines()
-
-# if args.reverse == True:
-#     lines.reverse()
-
-# for line in range (0, args.lines):
-#     print(lines[line])
 
 if __name__ == "__main__":
     main()
