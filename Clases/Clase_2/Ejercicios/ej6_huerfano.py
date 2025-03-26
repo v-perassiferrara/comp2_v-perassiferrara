@@ -11,4 +11,4 @@ if pid == 0:
 
 else:
     print(f"Padre: {os.getpid()}. Finalizando")
-    os._exit(0) # padre finaliza mientras hijo si
+    os._exit(0) # padre finaliza mientras hijo sigue
