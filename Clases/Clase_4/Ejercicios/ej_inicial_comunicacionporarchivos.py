@@ -33,3 +33,14 @@ def crear_hijos():
 if __name__ == "__main__":
     crear_hijos()
     os.wait()
+    
+'''
+
+Como limitaciones:
+- Varios procesos podrían intentar escribir a la vez y sobreescribir el contenido de la misma línea.
+- Los procesos heredan el descriptor del archivo abierto, causando escrituras duplicadas o corrupción.
+- El orden de ejecución es no determinista, generando salidas caóticas.
+- Cierre inseguro del archivo por múltiples procesos simultáneamente.
+- El "abuelo" podría leer el archivo antes de que todos los hijos terminen de escribir.
+
+'''
