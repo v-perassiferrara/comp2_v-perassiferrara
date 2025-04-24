@@ -8,20 +8,20 @@ import time
 from multiprocessing import Queue
 
 def productor(q):
-    print("Padre esperando a para escribir")
+    print("Productor para escribir...")
     
     for i in range(5):
         msg = f"Mensaje {i}"
         q.put(msg)
         
-        print(f"Padre envió: {msg}")
+        print(f"Productor envió: {msg}")
         
         time.sleep(0.5)
     
     q.put("FIN")
 
-def consumidor(q):
-    print("Hijo esperando mensaje...")
+def consumidor(q,i):
+    print(f"Consumidor {i} esperando mensaje...")
     while True:
         
         mensaje = q.get(timeout=5)  # Lanza excepción si pasan 5 segundos para evitar deadlock
@@ -29,26 +29,37 @@ def consumidor(q):
         if mensaje == "FIN":
             break
         
-        print(f"Hijo recibió: {mensaje}")
+        print(f"Consumidor {i} recibió: {mensaje}")
         
         time.sleep(0.5)
     
-    print("Hijo: terminando.")
+    print(f"Consumidor {i}: terminando.")
 
 def main():
-    q = Queue(10) # El argumento especifica una capacidad máxima de 10 elementos
+    q = Queue(20) # El argumento especifica una capacidad máxima de 20 elementos
     
+    num_consumidores = 2
+    
+    # Crear productor
     pid = os.fork()
-    
     if pid == 0:
-        # Proceso hijo: consumidor
-        consumidor(q)
-        os._exit(0)
-    else:
-        # Proceso padre: productor
+        # Productor
         productor(q)
-        os.wait()  # Espera a que el proceso hijo termine
-        print("Padre: fin de la comunicación.")
+        os._exit(0)
+    
+    # Crear consumidores
+    for i in range(num_consumidores):
+        pid = os.fork()
+        if pid == 0:
+            # Consumidor
+            consumidor(q,i)
+            os._exit(0)
+
+    for i in range(num_consumidores + 1):
+        os.wait()  # Espera a que los hijos terminen
+    
+    print("Fin de la comunicación.")
 
 if __name__ == "__main__":
     main()
+
