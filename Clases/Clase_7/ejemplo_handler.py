@@ -1,9 +1,6 @@
 import signal
 import time
 
-import signal
-import time
-
 # Definir una función manejadora para señales
 def handler(signum, frame):
     # Imprimir un mensaje indicando que se ha recibido una señal
