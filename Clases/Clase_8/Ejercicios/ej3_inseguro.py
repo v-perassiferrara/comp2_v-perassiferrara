@@ -7,12 +7,12 @@ Realiza primero la versión sin Lock (para evidenciar valores erróneos) y luego
 mostrando el resultado correcto (100.000).
 '''
 
-from multiprocessing import Process, Lock, Value
+from multiprocessing import Process, Value
 
 contador = Value('i', 0) # crea un contador compartido global entero
 
 def incrementar(variable):
-    for i in range(50000):
+    for _ in range(50000):
         variable.value += 1
         
 if __name__ == '__main__':

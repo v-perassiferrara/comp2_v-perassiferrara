@@ -25,8 +25,8 @@ def productor(Productor_conn):
     
     Productor_conn.close() # Cierra el extremo del pipe
     print("Productor: Fin de la ejecución")
-    
-    
+
+
 def consumidor(Consumidor_conn):
     
     while True:

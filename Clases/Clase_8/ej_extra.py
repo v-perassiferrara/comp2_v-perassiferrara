@@ -1,11 +1,12 @@
 # ver como se ven los file descriptors indicando que pasa con ls -l con la clase pipe de multiprocessing (no os.pipe)
 
 from multiprocessing import Process, Pipe
-import os, time
+import os
+import time
 
 def tarea(conn):
     conn.send("Hola desde hijo")
-    print(f"Hijo empezó")
+    print("Hijo empezó")
     time.sleep(10)
     print("Hijo terminando")
 
