@@ -9,7 +9,7 @@ def fix_cpu(cpu_id):
     except AttributeError:
         pass  # No disponible en Windows o Mac
 
-def compute_atomic(name, count=500_000_000, cpu_id=None):
+def compute_atomic(name, count=2_000_000, cpu_id=None):
     if cpu_id is not None:
         fix_cpu(cpu_id)
 
@@ -37,8 +37,8 @@ def run_threads():
 
 def run_processes():
     print("\n[MULTIPROCESSING]")
-    p1 = multiprocessing.Process(target=compute_atomic, args=("Process A", 500_000_000, 0))
-    p2 = multiprocessing.Process(target=compute_atomic, args=("Process B", 500_000_000, 1))
+    p1 = multiprocessing.Process(target=compute_atomic, args=("Process A", 2_000_000, 0))
+    p2 = multiprocessing.Process(target=compute_atomic, args=("Process B", 2_000_000, 1))
     start = time.time()
     p1.start()
     p2.start()

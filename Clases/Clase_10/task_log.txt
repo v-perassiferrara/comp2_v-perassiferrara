@@ -1,0 +1,16 @@
+Tue Jun 10 08:27:11 2025: Resultado de 'Tarea-3' por Procesador 2
+Tue Jun 10 08:27:12 2025: Resultado de 'Tarea-2' por Procesador 1
+Tue Jun 10 08:27:12 2025: Resultado de 'Tarea-1' por Procesador 0
+Tue Jun 10 08:27:13 2025: Resultado de 'Tarea-6' por Procesador 0
+Tue Jun 10 08:27:13 2025: Resultado de 'Tarea-4' por Procesador 2
+Tue Jun 10 08:27:13 2025: Resultado de 'Tarea-5' por Procesador 1
+Tue Jun 10 08:27:14 2025: Resultado de 'Tarea-7' por Procesador 0
+Tue Jun 10 08:27:14 2025: Resultado de 'Tarea-8' por Procesador 2
+Tue Jun 10 08:27:14 2025: Resultado de 'Tarea-9' por Procesador 1
+Tue Jun 10 08:27:15 2025: Resultado de 'Tarea-10' por Procesador 0
+Tue Jun 10 08:27:15 2025: Resultado de 'Tarea-12' por Procesador 1
+Tue Jun 10 08:27:16 2025: Resultado de 'Tarea-11' por Procesador 2
+Tue Jun 10 08:27:16 2025: Resultado de 'Tarea-14' por Procesador 1
+Tue Jun 10 08:27:16 2025: Resultado de 'Tarea-13' por Procesador 0
+Tue Jun 10 08:27:17 2025: Resultado de 'Tarea-15' por Procesador 2
+--- FIN DEL REGISTRO ---
