@@ -1,0 +1,11 @@
+--- Reporte de análisis biométrico ---
+
+Fecha del reporte: 2025-07-24T12:55:58
+
+Total de bloques: 24
+Bloques con alerta: 0
+
+Promedio de frecuencia: 111.47
+Promedio de presión (sistolica): 159.88
+Promedio de oxígeno: 95.06
+------------------------------------------
