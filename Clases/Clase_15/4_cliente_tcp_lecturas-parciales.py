@@ -20,9 +20,10 @@ def recv_all(sock):
     
     chunks = []
     while True:
-        b = sock.recv(64 * 1024)  # 64 KiB por iteración
+        b = sock.recv(300000)  # 64 KiB por iteración
         if not b:
             break
+        # print("ejecutó recv()")
         chunks.append(b)
     return b"".join(chunks)
 
