@@ -10,7 +10,11 @@ import socket
 
 HOST, PORT = "127.0.0.1", 9010
 
-with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as srv:  # socket pasivo inicial del servidor
+with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as srv:  # socket pasivo TCP inicial del servidor
+
+    # Permite reusar el puerto de inmediato al reiniciar el servidor.
+    # Sin esto, el sistema operativo lo bloquea en estado TIME_WAIT para procesar paquetes tardíos, 
+    # lo que causaría un error de "Address already in use".
     srv.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
     
     srv.bind((HOST, PORT))  # fija la ip y puerto del servidor
