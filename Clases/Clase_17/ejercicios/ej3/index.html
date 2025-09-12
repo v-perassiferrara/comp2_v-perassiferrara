@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Formulario prueba</title>
+</head>
+
+<body>
+    
+    <h1>Formulario de prueba</h1>
+
+    <form action="/submit" method="post">
+
+        <p>
+            <label for="nombre">Nombre:</label><br>
+            <input type="text" id="nombre" name="nombre" required>
+        </p>
+
+        <p>
+            <label for="email">Email:</label><br>
+            <input type="email" id="email" name="email" required>
+        </p>
+
+        <p>
+            <label for="edad">Edad:</label><br>
+            <input type="number" id="edad" name="edad" min="0" required>
+        </p>
+
+        <p>
+            <label for="opciones">Elige una opción:</label><br>
+            <select id="opciones" name="opcion_elegida">
+                <option value="">--Por favor, elige una opción--</option>
+                <option value="opcion1">Opción 1</option>
+                <option value="opcion2">Opción 2</option>
+                <option value="opcion3">Opción 3</option>
+            </select>
+        </p>
+
+        <p>
+            <input type="checkbox" id="terminos" name="acepta_terminos" value="aceptado">
+            <label for="terminos">Acepto los términos y condiciones</label>
+        </p>
+
+        <p>
+            <input type="submit" value="Enviar">
+        </p>
+
+    </form>
+
+</body>
+</html>
