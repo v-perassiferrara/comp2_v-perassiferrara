@@ -27,5 +27,5 @@ if __name__ == "__main__":
     
     with http.server.HTTPServer(("", PORT), FileServer) as httpd:
         print(f"Servidor ejecutándose en http://localhost:{PORT}")
-        print("Sirviendo archivos desde ./public/")
+        print("Sirviendo archivos")
         httpd.serve_forever()
