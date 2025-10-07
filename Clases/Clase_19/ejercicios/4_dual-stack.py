@@ -36,26 +36,30 @@ class ManejadorUniversal(socketserver.BaseRequestHandler):
         tiempos_respuesta = []
         
         # Detectar tipo de conexión
-        if self.client_address[0].count(':') > 1:   # si hay dos puntos, es IPv6
+        if ":" in self.client_address[0]:   # si hay dos puntos, es IPv6
             protocolo = "ipv6"
         else:
             protocolo = "ipv4"
         
         with lock:
-            estadisticas[protocolo]['conexiones'] += 1
+            estadisticas[protocolo]['conexiones'] += 1  # sumamos al contador de conexiones para el protocolo correspondiente
             
+            
+            
+        tiempo_inicio = time.time() # para calcular tiempo de respuesta
+        
         
         print(f"[{protocolo}] Conexión de: {self.client_address}")
         
         
-        tiempo_inicio = time.time()
         data = self.request.recv(1024).strip()        
         
-        if not data:
+        if not data:    # si no hay datos, no hace nada
             return
         
         respuesta = f"Servidor {protocolo}: {data.decode()}"
         self.request.sendall(respuesta.encode())
+
 
         tiempo_fin = time.time()
         

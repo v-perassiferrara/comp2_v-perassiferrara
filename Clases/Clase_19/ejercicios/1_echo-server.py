@@ -10,18 +10,19 @@ class MiManejador(socketserver.BaseRequestHandler):
             # Recibir datos
             data = self.request.recv(1024).strip()
             if data == b"QUIT":
-                respuesta = "Saliendo..."
-                self.request.sendall(respuesta.encode())
+                self.request.sendall("Saliendo...\n".encode())
+                self.request.close()
                 break
-            print(f"Recibido: {data.decode()}")
-            
-            # Enviar respuesta
-            respuesta = f"Echo: {data.decode().upper()}"
-            self.request.sendall(respuesta.encode())
+            else:
+                print(f"Recibido: {data.decode()}")
+                # Enviar respuesta
+                respuesta = f"Echo: {data.decode().upper()}"
+                self.request.sendall(respuesta.encode())
 
 # Crear clase de servidor IPv6
 class ServidorIPv6(socketserver.TCPServer):
     address_family = socket.AF_INET6    # usamos socket de IPv6
+    allow_reuse_address = True  # permite reusar la direccion
 
 if __name__ == "__main__":
     HOST, PORT = "::1", 8888

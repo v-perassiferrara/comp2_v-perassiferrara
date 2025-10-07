@@ -5,17 +5,6 @@ import os
 
 
 '''
-Hecho con ia. Si no veía cómo se tenía que hacer, no se me ocurría.
-'''
-
-
-
-
-
-
-
-
-'''
 Ejercicio 3: Servidor de Archivos
 
 Objetivo: Implementar un servidor que permita descargar archivos usando IPv6.
@@ -82,9 +71,10 @@ class MiManejador(socketserver.BaseRequestHandler):
 
 class ServidorIPv6(socketserver.TCPServer):
     address_family = socket.AF_INET6
+    allow_reuse_address = True
 
 if __name__ == "__main__":
-    HOST, PORT = "::1", 9990
+    HOST, PORT = "::1", 9999
     os.makedirs(DIRECTORIO_ARCHIVOS, exist_ok=True)
     print(f"Servidor IPv6 iniciado en [{HOST}]:{PORT}")
     with ServidorIPv6((HOST, PORT), MiManejador) as servidor:

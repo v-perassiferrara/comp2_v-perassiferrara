@@ -57,14 +57,20 @@ class HandlerCalculadora(socketserver.BaseRequestHandler):
         elif operador == "*":
             resultado = operando1 * operando2
         elif operador == "/":
+            if operando2 == 0:
+                self.request.sendall("ERROR: División por cero\n".encode())
+                return
             resultado = operando1 / operando2
         else:
             self.request.sendall(f"ERROR: Operador no reconocido: {operador}\n".encode())
             return
         
+        
         # Enviar respuesta
-        respuesta = f"Resultado: {resultado}\n"
+        respuesta = f"RESULTADO: {resultado}\n"
         self.request.sendall(respuesta.encode())
+
+
 
 # Crear clase de servidor IPv6
 class ServidorIPv6(socketserver.TCPServer):

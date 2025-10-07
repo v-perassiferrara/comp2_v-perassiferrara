@@ -30,33 +30,33 @@ class ManejadorThreading(socketserver.BaseRequestHandler):
         # Agregar cliente a la lista
         clientes.append(self.request)
         
-        try:
-            while True:
-                data = self.request.recv(1024)
-                if not data:
-                    break
-                
-                mensaje = f"{self.client_address} envió: {data.decode()}"
-                print(mensaje)
-                
-                # Broadcast a todos los clientes
-                for cliente in clientes:
-                    try:
-                        cliente.sendall(mensaje.encode())
-                    except:  # noqa: E722
-                        clientes.remove(cliente)  # Borrar de la lista si falla
-        finally:
-            # Borrar cliente al desconectar
-            if self.request in clientes:
-                clientes.remove(self.request)
-            print(f"[{thread_name}] Conexión cerrada")
+        while True:
+            data = self.request.recv(1024)
+            if not data:
+                break
+
+            mensaje = f"[Puerto {self.client_address[1]}] envió: {data.decode()}"
+            
+            print(mensaje)
+
+            # Broadcast a todos los clientes
+            for cliente in clientes:
+                try:
+                    cliente.sendall(mensaje.encode())
+                except:  # noqa: E722
+                    clientes.remove(cliente)  # Borrar de la lista si falla
+
+        if self.request in clientes:
+            clientes.remove(self.request)
+            
+        print(f"[{thread_name}] Conexión cerrada")
 
 class ServidorIPv6Threading(socketserver.ThreadingTCPServer):
     address_family = socket.AF_INET6
     allow_reuse_address = True
 
 if __name__ == "__main__":
-    HOST, PORT = "::", 9900
+    HOST, PORT = "::1", 9900
     servidor = ServidorIPv6Threading((HOST, PORT), ManejadorThreading)
     print(f"Servidor chat multi-hilo IPv6 en [{HOST}]:{PORT}")
     

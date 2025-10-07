@@ -7,13 +7,13 @@ server_socket = socket.socket(socket.AF_INET6, socket.SOCK_STREAM)
 server_socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
 
 # Enlazar a dirección y puerto
-# '::1' es localhost en IPv6
+# '::1' es "localhost" en IPv6
 # '::' escucha en todas las interfaces
 server_address = ('::1', 8080)  # como si pusieramos localhost:8080
 server_socket.bind(server_address)
 
 # Escuchar conexiones
-server_socket.listen(5)
+server_socket.listen(5) # número máximo de conexiones que se pueden tener en cola
 print(f"Servidor IPv6 escuchando en {server_address}")
 
 while True:
