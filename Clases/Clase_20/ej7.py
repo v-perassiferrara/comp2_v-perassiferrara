@@ -1,6 +1,3 @@
-# HACER ESTO
-
-
 def trabajador():
     """Un trabajador que recibe instrucciones y las ejecuta"""
     print("Trabajador listo. Esperando instrucciones...")
