@@ -35,7 +35,7 @@ async def broadcast(mensaje, remitente=None):
 async def manejar_cliente(reader, writer):
     """Maneja un cliente individual"""
     addr = writer.get_extra_info("peername")
-    print(f"🔌 Cliente conectado desde {addr}")
+    print(f"Cliente conectado desde {addr}")
 
     clientes[writer] = addr
 
@@ -59,7 +59,7 @@ async def manejar_cliente(reader, writer):
                 mensaje = data.decode().strip()
 
             except UnicodeDecodeError:
-                print(f"⚠️  Cliente {addr} se desconectó de forma abrupta.")
+                print(f"Cliente {addr} se desconectó de forma abrupta.")
                 break
 
             # Procesar comandos (lista de usuarios, salir o mandar mensaje)
@@ -76,15 +76,15 @@ async def manejar_cliente(reader, writer):
                 await writer.drain()
 
             else:
-                await broadcast(f"{addr}: {mensaje}", writer)
+                await broadcast(f"{addr}: {mensaje}\n", writer)
 
     except Exception as e:
-        print(f"❌ Error con cliente {addr}: {e}")
+        print(f"Error con cliente {addr}: {e}")
 
     finally:
         clientes.pop(writer)
         await broadcast(f"Salió de la sala: {addr}", writer)
-        print(f"👋 Cliente {addr} desconectado")
+        print(f"Cliente {addr} desconectado")
         writer.close()
         await writer.wait_closed()
 
@@ -93,7 +93,7 @@ async def main():
     server = await asyncio.start_server(manejar_cliente, "127.0.0.1", 8888)
 
     addr = server.sockets[0].getsockname()
-    print(f"🚀 Servidor escuchando en {addr}")
+    print(f"Servidor escuchando en {addr}")
     print("   Conéctate con: telnet localhost 8888")
 
     async with server:

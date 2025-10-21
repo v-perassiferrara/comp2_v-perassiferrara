@@ -56,9 +56,14 @@ async def revisar_sitio(session, url, fallos):
 
 
 async def monitorear_sitios(urls):
+    
     async with aiohttp.ClientSession() as session:
         fallos = {url: {"error": 0, "timeout": 0} for url in urls}
+        
+        
         tareas = [asyncio.create_task(revisar_sitio(session, url, fallos)) for url in urls]
+        
+        
         while True:
             await asyncio.gather(*tareas)
 
@@ -67,7 +72,8 @@ async def main():
         "https://www.google.com",
         "https://www.github.com",
         "https://www.python.org",
-        "https://www.wikipedia.org"
+        "https://www.wikipedia.org",
+        "https://um.edu.ar"
     ]
     await monitorear_sitios(sitios)
 
