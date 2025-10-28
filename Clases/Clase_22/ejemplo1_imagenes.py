@@ -1,4 +1,4 @@
-from concurrent.futures import ThreadPoolExecutor, ProcessPoolExecutor
+from concurrent.futures import ThreadPoolExecutor #, ProcessPoolExecutor
 from PIL import Image, ImageFilter
 import time
 from pathlib import Path
