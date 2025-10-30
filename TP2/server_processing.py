@@ -1,16 +1,9 @@
 import argparse
 import socketserver
 import multiprocessing
-import functools
-import asyncio
 import os
-import sys
-
-# Add the project root to the sys.path to allow imports from common and processor
-sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
 from common.protocol import Protocol
-from common.serialization import serialize, deserialize
 from processor.screenshot import capture_screenshot
 from processor.performance import analyze_performance
 from processor.image_processor import process_images
@@ -18,27 +11,31 @@ from processor.image_processor import process_images
 
 # Function to run processing tasks in a separate process
 def run_processing_task(task_name, url, **kwargs):
-    if task_name == 'screenshot':
-        return capture_screenshot(url, **kwargs)
-    elif task_name == 'performance':
-        return analyze_performance(url, **kwargs)
-    elif task_name == 'images':
-        return process_images(url, **kwargs)
-    else:
-        raise ValueError(f"Unknown task: {task_name}")
+    """Ejecuta una tarea de procesamiento en un proceso separado"""
+    try:
+        if task_name == 'screenshot':
+            return capture_screenshot(url, **kwargs)
+        elif task_name == 'performance':
+            return analyze_performance(url, **kwargs)
+        elif task_name == 'images':
+            return process_images(url, **kwargs)
+        else:
+            raise ValueError(f"Unknown task: {task_name}")
+    except Exception as e:
+        print(f"Error in task {task_name}: {e}")
+        return None
+
 
 class ProcessingHandler(socketserver.BaseRequestHandler):
     """
-    The request handler class for our server.
-
-    It is instantiated once per connection to the server, and must
-    override the handle() method to implement communication to the client.
+    Handler para procesar solicitudes del servidor de scraping.
+    Ejecuta tareas CPU-intensive en procesos separados.
     """
 
     def handle(self):
-        # self.request is the TCP socket connected to the client
+        # self.request es el socket TCP conectado al cliente
         try:
-            # Receive message length
+            # Recibir longitud del mensaje
             length_bytes = self.request.recv(4)
             if not length_bytes:
                 print("Client disconnected.")
@@ -57,11 +54,10 @@ class ProcessingHandler(socketserver.BaseRequestHandler):
                 self.request.sendall(encoded_response)
                 return
 
-            # Execute tasks using the multiprocessing pool
-            # The pool is passed to the handler implicitly through the server object
+            # Ejecutar tareas usando el pool de multiprocessing
             pool = self.server.pool
 
-            # Define processing tasks
+            # Definir tareas de procesamiento (se ejecutan en paralelo)
             processing_tasks = [
                 pool.apply_async(run_processing_task, ('screenshot', url)),
                 pool.apply_async(run_processing_task, ('performance', url)),
@@ -69,26 +65,32 @@ class ProcessingHandler(socketserver.BaseRequestHandler):
             ]
 
             results = {}
+            
+            # Recolectar resultados con timeout
             for i, task in enumerate(processing_tasks):
                 try:
                     if i == 0:  # Screenshot
-                        results['screenshot'] = task.get(timeout=60) # Increased timeout
-                    elif i == 1: # Performance
+                        results['screenshot'] = task.get(timeout=60)
+                    elif i == 1:  # Performance
                         results['performance'] = task.get(timeout=60)
-                    elif i == 2: # Images
+                    elif i == 2:  # Images
                         results['thumbnails'] = task.get(timeout=60)
                 except multiprocessing.TimeoutError:
-                    print(f"Processing task timed out for URL: {url}")
-                    # Assign an error status or empty data for timed-out tasks
-                    if i == 0: results['screenshot'] = None
-                    elif i == 1: results['performance'] = {'error': 'Timed out'}
-                    elif i == 2: results['thumbnails'] = []
+                    print(f"Processing task {i} timed out for URL: {url}")
+                    if i == 0:
+                        results['screenshot'] = None
+                    elif i == 1:
+                        results['performance'] = {'error': 'Timeout'}
+                    elif i == 2:
+                        results['thumbnails'] = []
                 except Exception as e:
-                    print(f"Error in processing task for URL {url}: {e}")
-                    # Assign an error status or empty data for failed tasks
-                    if i == 0: results['screenshot'] = None
-                    elif i == 1: results['performance'] = {'error': str(e)}
-                    elif i == 2: results['thumbnails'] = []
+                    print(f"Error in processing task {i} for URL {url}: {e}")
+                    if i == 0:
+                        results['screenshot'] = None
+                    elif i == 1:
+                        results['performance'] = {'error': str(e)}
+                    elif i == 2:
+                        results['thumbnails'] = []
 
             response_data = {
                 'status': 'success',
@@ -100,39 +102,60 @@ class ProcessingHandler(socketserver.BaseRequestHandler):
 
         except Exception as e:
             print(f"Error handling request: {e}")
-            response_data = {'status': 'error', 'message': str(e)}
-            encoded_response = Protocol.encode_message(response_data)
-            self.request.sendall(encoded_response)
+            try:
+                response_data = {'status': 'error', 'message': str(e)}
+                encoded_response = Protocol.encode_message(response_data)
+                self.request.sendall(encoded_response)
+            except:
+                pass  # Si falla el envío, no hay mucho que hacer
 
 
 class ThreadedTCPServer(socketserver.ThreadingMixIn, socketserver.TCPServer):
-    pass # No need for custom implementation here
+    """Servidor TCP con soporte para múltiples hilos"""
+    allow_reuse_address = True  # Permite reutilizar la dirección inmediatamente
+
 
 def main():
     parser = argparse.ArgumentParser(description="Servidor de Procesamiento Distribuido")
-    parser.add_argument('-i', '--ip', type=str, required=True, help="Dirección de escucha")
-    parser.add_argument('-p', '--port', type=int, required=True, help="Puerto de escucha")
+    parser.add_argument('-i', '--ip', type=str, required=True, 
+                        help="Dirección de escucha")
+    parser.add_argument('-p', '--port', type=int, required=True, 
+                        help="Puerto de escucha")
     parser.add_argument('-n', '--processes', type=int, default=os.cpu_count(),
                         help=f"Número de procesos en el pool (default: {os.cpu_count()})")
 
     args = parser.parse_args()
 
-    # Create a pool of processes
+    # Crear pool de procesos
     process_pool = multiprocessing.Pool(processes=args.processes)
 
-    with ThreadedTCPServer((args.ip, args.port), ProcessingHandler) as server:
-        # Add the pool to the server instance to make it accessible to handlers
-        server.pool = process_pool
+    print(f"Servidor de Procesamiento iniciado")
+    print(f"Escuchando en {args.ip}:{args.port}")
+    print(f"Pool de {args.processes} procesos")
 
-        print(f"Servidor de Procesamiento escuchando en {args.ip}:{args.port} con {args.processes} procesos.")
-        try:
-            server.serve_forever()
-        except KeyboardInterrupt:
-            print("Servidor de Procesamiento detenido.")
-        finally:
-            process_pool.close()
-            process_pool.join()
+    server = None
+    try:
+        # Crear y configurar servidor
+        server = ThreadedTCPServer((args.ip, args.port), ProcessingHandler)
+        server.pool = process_pool  # Adjuntar pool al servidor
+
+        print("Servidor listo. Presiona Ctrl+C para detener.")
+        server.serve_forever()
+    except KeyboardInterrupt:
+        print("\n⏹ Servidor de Procesamiento detenido.")
+    except Exception as e:
+        print(f"Error en el servidor: {e}")
+    finally:
+        # Limpieza ordenada de recursos
+        if server:
             server.shutdown()
+            server.server_close()
+        
+        print("Cerrando pool de procesos...")
+        process_pool.close()
+        process_pool.join()
+        print("Pool de procesos cerrado correctamente.")
+
 
 if __name__ == '__main__':
     main()

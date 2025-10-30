@@ -4,7 +4,7 @@ Procesamiento de imágenes de páginas web
 import base64
 from io import BytesIO
 from PIL import Image
-from playwright.sync_api import sync_playwright
+from playwright.sync_api import sync_playwright, TimeoutError as PlaywrightTimeoutError
 import requests
 from urllib.parse import urljoin
 
@@ -40,35 +40,61 @@ def process_images(url, max_images=3, thumbnail_size=(150, 150), timeout=30000):
             for img_url in img_urls:
                 if not img_url:
                     continue
+                
                 try:
                     absolute_img_url = urljoin(url, img_url)
 
+                    # Validar que sea HTTP/HTTPS
                     if not absolute_img_url.startswith(('http://', 'https://')):
                         continue
                     
-                    # Whitelist of supported extensions
+                    # Filtrar extensiones soportadas
                     supported_extensions = ('.png', '.jpg', '.jpeg', '.gif', '.bmp', '.webp')
                     if not absolute_img_url.lower().endswith(supported_extensions):
-                        print(f"Skipping unsupported image format: {absolute_img_url}")
-                        continue
+                        # Intentar de todos modos si no tiene extensión obvia
+                        if '.' in absolute_img_url.split('/')[-1]:
+                            continue
 
-                    response = requests.get(absolute_img_url, timeout=5)
+                    # Descargar imagen
+                    response = requests.get(absolute_img_url, timeout=5, stream=True)
                     if response.status_code == 200:
-                        img = Image.open(BytesIO(response.content))
-                        
-                        # Crear thumbnail
-                        img.thumbnail(thumbnail_size)
-                        
-                        # Convertir a base64
-                        buffered = BytesIO()
-                        img.save(buffered, format="PNG")
-                        thumb_b64 = base64.b64encode(buffered.getvalue()).decode('utf-8')
-                        thumbnails.append(thumb_b64)
+                        # Intentar abrir la imagen
+                        try:
+                            img = Image.open(BytesIO(response.content))
+                            
+                            # Crear thumbnail
+                            img.thumbnail(thumbnail_size, Image.Resampling.LANCZOS)
+                            
+                            # Convertir a base64
+                            buffered = BytesIO()
+                            
+                            # Convertir a RGB si es necesario (para PNG con transparencia)
+                            if img.mode in ('RGBA', 'LA', 'P'):
+                                background = Image.new('RGB', img.size, (255, 255, 255))
+                                if img.mode == 'P':
+                                    img = img.convert('RGBA')
+                                background.paste(img, mask=img.split()[-1] if img.mode in ('RGBA', 'LA') else None)
+                                img = background
+                            
+                            img.save(buffered, format="JPEG", quality=85)
+                            thumb_b64 = base64.b64encode(buffered.getvalue()).decode('utf-8')
+                            thumbnails.append(thumb_b64)
+                        except (IOError, OSError) as e:
+                            print(f"Error procesando imagen {img_url}: No es una imagen válida - {e}")
+                            continue
+                    
+                except requests.RequestException as e:
+                    print(f"Error descargando imagen {img_url}: {e}")
+                    continue
                 except Exception as e:
-                    print(f"Error procesando imagen {img_url}: {e}")
+                    print(f"Error inesperado procesando imagen {img_url}: {e}")
                     continue
             
             return thumbnails
+            
+    except PlaywrightTimeoutError:
+        print(f"Timeout al cargar la página para procesar imágenes: {url}")
+        return []
     except Exception as e:
         print(f"Error procesando imágenes: {e}")
         return []

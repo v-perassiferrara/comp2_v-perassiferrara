@@ -2,7 +2,7 @@
 Análisis de rendimiento de páginas web
 """
 import time
-from playwright.sync_api import sync_playwright
+from playwright.sync_api import sync_playwright, TimeoutError as PlaywrightTimeoutError
 
 
 def analyze_performance(url, timeout=30000):
@@ -32,13 +32,15 @@ def analyze_performance(url, timeout=30000):
                 try:
                     headers = response.headers
                     content_length = headers.get('content-length', '0')
-                    total_size += int(content_length) if content_length.isdigit() else 0
+                    if content_length.isdigit():
+                        total_size += int(content_length)
                     requests.append(response.url)
-                except:
-                    pass
+                except Exception:
+                    pass  # Ignorar errores en responses individuales
             
             page.on('response', handle_response)
             
+            # Navegar a la página
             page.goto(url, timeout=timeout, wait_until='networkidle')
             
             load_time = (time.time() - start_time) * 1000  # en ms
@@ -50,6 +52,15 @@ def analyze_performance(url, timeout=30000):
                 'total_size_kb': round(total_size / 1024, 2),
                 'num_requests': len(requests)
             }
+            
+    except PlaywrightTimeoutError:
+        print(f"Timeout analizando rendimiento de: {url}")
+        return {
+            'load_time_ms': 0,
+            'total_size_kb': 0,
+            'num_requests': 0,
+            'error': 'Timeout'
+        }
     except Exception as e:
         print(f"Error analizando rendimiento: {e}")
         return {
