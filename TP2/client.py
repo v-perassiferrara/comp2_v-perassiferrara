@@ -1,0 +1,42 @@
+import argparse
+import aiohttp
+import asyncio
+import json
+
+# Default server address
+SCRAPING_SERVER_IP = '127.0.0.1'
+SCRAPING_SERVER_PORT = 8000
+
+async def fetch_and_display_results(url, server_ip, server_port):
+    scrape_url = f"http://{server_ip}:{server_port}/scrape?url={url}"
+    print(f"Requesting scraping for: {url}")
+    print(f"Via server: {scrape_url}")
+
+    try:
+        async with aiohttp.ClientSession() as session:
+            async with session.get(scrape_url) as response:
+                response.raise_for_status()  # Raise an exception for HTTP errors (4xx or 5xx)
+                data = await response.json()
+                print("\n--- Scraping and Processing Results ---")
+                print(json.dumps(data, indent=2))
+    except aiohttp.ClientError as e:
+        print(f"Error connecting to the scraping server or during request: {e}")
+    except json.JSONDecodeError:
+        print("Error: Could not decode JSON response from the server.")
+    except Exception as e:
+        print(f"An unexpected error occurred: {e}")
+
+async def main():
+    parser = argparse.ArgumentParser(description="Cliente para el Sistema de Scraping Web Distribuido")
+    parser.add_argument('--url', type=str, required=True, help="URL a scrapear y analizar")
+    parser.add_argument('--server_ip', type=str, default=SCRAPING_SERVER_IP,
+                        help=f"IP del servidor de scraping (default: {SCRAPING_SERVER_IP})")
+    parser.add_argument('--server_port', type=int, default=SCRAPING_SERVER_PORT,
+                        help=f"Puerto del servidor de scraping (default: {SCRAPING_SERVER_PORT})")
+
+    args = parser.parse_args()
+
+    await fetch_and_display_results(args.url, args.server_ip, args.server_port)
+
+if __name__ == '__main__':
+    asyncio.run(main())
