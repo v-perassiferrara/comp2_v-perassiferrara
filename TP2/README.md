@@ -22,7 +22,6 @@ TP2/
 ├── common/
 │   ├── __init__.py
 │   └── protocol.py             # Protocolo de comunicación
-│
 ├── requirements.txt
 └── README.md
 ```
