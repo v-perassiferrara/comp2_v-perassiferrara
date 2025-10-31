@@ -21,8 +21,8 @@ TP2/
 │   └── image_processor.py      # Procesamiento de imágenes
 ├── common/
 │   ├── __init__.py
-│   ├── protocol.py             # Protocolo de comunicación
-│   └── serialization.py        # Serialización de datos
+│   └── protocol.py             # Protocolo de comunicación
+│
 ├── requirements.txt
 └── README.md
 ```
