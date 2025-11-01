@@ -9,7 +9,7 @@ from processor.performance import analyze_performance
 from processor.image_processor import process_images
 
 
-# Function to run processing tasks in a separate process
+# Funcion para ejecutar tareas de procesamiento en un proceso separado
 def run_processing_task(task_name, url, **kwargs):
     """Ejecuta una tarea de procesamiento en un proceso separado"""
     try:
@@ -76,7 +76,7 @@ class ProcessingHandler(socketserver.BaseRequestHandler):
                     elif i == 2:  # Images
                         results['thumbnails'] = task.get(timeout=60)
                 except multiprocessing.TimeoutError:
-                    print(f"Processing task {i} timed out for URL: {url}")
+                    print(f"Tarea de procesamiento {i} agotada para URL: {url}")
                     if i == 0:
                         results['screenshot'] = None
                     elif i == 1:
@@ -84,7 +84,7 @@ class ProcessingHandler(socketserver.BaseRequestHandler):
                     elif i == 2:
                         results['thumbnails'] = []
                 except Exception as e:
-                    print(f"Error in processing task {i} for URL {url}: {e}")
+                    print(f"Error en tarea de procesamiento {i} para URL {url}: {e}")
                     if i == 0:
                         results['screenshot'] = None
                     elif i == 1:
@@ -101,13 +101,13 @@ class ProcessingHandler(socketserver.BaseRequestHandler):
             self.request.sendall(encoded_response)
 
         except Exception as e:
-            print(f"Error handling request: {e}")
+            print(f"Error manejando solicitud: {e}")
             try:
                 response_data = {'status': 'error', 'message': str(e)}
                 encoded_response = Protocol.encode_message(response_data)
                 self.request.sendall(encoded_response)
-            except:
-                pass  # Si falla el envío, no hay mucho que hacer
+            except Exception:
+                pass  # Si falla el envio, no hay mucho que hacer
 
 
 class ThreadedTCPServer(socketserver.ThreadingMixIn, socketserver.TCPServer):
@@ -129,7 +129,7 @@ def main():
     # Crear pool de procesos
     process_pool = multiprocessing.Pool(processes=args.processes)
 
-    print(f"Servidor de Procesamiento iniciado")
+    print("Servidor de Procesamiento iniciado")
     print(f"Escuchando en {args.ip}:{args.port}")
     print(f"Pool de {args.processes} procesos")
 

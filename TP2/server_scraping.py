@@ -11,7 +11,7 @@ from scraper.metadata_extractor import MetadataExtractor
 from scraper.async_http import AsyncHTTPClient
 
 
-# Configuration for the processing server
+# Configuracion del servidor de procesamiento
 PROCESSING_SERVER_IP = '127.0.0.1'
 PROCESSING_SERVER_PORT = 8001
 
@@ -35,7 +35,7 @@ def get_address_family(ip):
 
 
 async def connect_to_processing_server(max_retries=3):
-    """Establishes an asynchronous connection to the processing server with retries."""
+    """Establece una conexion asincrona al servidor de procesamiento con reintentos."""
     for attempt in range(max_retries):
         try:
             reader, writer = await asyncio.open_connection(
@@ -86,7 +86,7 @@ async def handle_scrape(request):
                 'images_count': HTMLParser.count_images(soup)
             }
 
-            # Communicate with processing server (con reintentos)
+            # Comunicar con servidor de procesamiento (con reintentos)
             reader, writer = await connect_to_processing_server()
             if reader and writer:
                 try:
@@ -105,21 +105,21 @@ async def handle_scrape(request):
                     await writer.wait_closed()
             else:
                 status = 'warning'
-                error_message = "Could not connect to processing server after retries."
+                error_message = "No se pudo conectar al servidor de procesamiento despues de reintentos."
                 print(error_message)
 
         except asyncio.TimeoutError:
             status = 'error'
-            error_message = "Scraping timed out (30 seconds)."
-            print(f"Scraping timed out for URL: {url}")
+            error_message = "Scraping agotado (30 segundos)."
+            print(f"Scraping agotado para URL: {url}")
         except aiohttp.ClientError as e:
             status = 'error'
-            error_message = f"HTTP client error: {str(e)}"
-            print(f"Client error scraping URL {url}: {e}")
+            error_message = f"Error de cliente HTTP: {str(e)}"
+            print(f"Error de cliente al hacer scraping de URL {url}: {e}")
         except Exception as e:
             status = 'error'
             error_message = str(e)
-            print(f"Error scraping URL {url}: {e}")
+            print(f"Error al hacer scraping de URL {url}: {e}")
 
     response_payload = {
         "url": url,
@@ -152,9 +152,6 @@ async def main():
 
     PROCESSING_SERVER_IP = args.processing_ip
     PROCESSING_SERVER_PORT = args.processing_port
-
-    # Detectar familia de direcciones (IPv4 o IPv6)
-    family = get_address_family(args.ip)
 
     app = aiohttp.web.Application()
     app.router.add_get('/scrape', handle_scrape)

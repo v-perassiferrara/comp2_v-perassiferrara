@@ -3,7 +3,7 @@ import aiohttp
 import asyncio
 import json
 
-# Default server address
+# Direccion predeterminada del servidor
 SCRAPING_SERVER_IP = '127.0.0.1'
 SCRAPING_SERVER_PORT = 8000
 
@@ -15,16 +15,16 @@ async def fetch_and_display_results(url, server_ip, server_port):
     try:
         async with aiohttp.ClientSession() as session:
             async with session.get(scrape_url) as response:
-                response.raise_for_status()  # Raise an exception for HTTP errors (4xx or 5xx)
+                response.raise_for_status()  # Lanzar excepcion por errores HTTP (4xx o 5xx)
                 data = await response.json()
-                print("\n--- Scraping and Processing Results ---")
+                print("\n--- Resultados de Scraping y Procesamiento ---")
                 print(json.dumps(data, indent=2))
     except aiohttp.ClientError as e:
-        print(f"Error connecting to the scraping server or during request: {e}")
+        print(f"Error al conectarse al servidor de scraping o durante la solicitud: {e}")
     except json.JSONDecodeError:
-        print("Error: Could not decode JSON response from the server.")
+        print("Error: No se pudo decodificar la respuesta JSON del servidor.")
     except Exception as e:
-        print(f"An unexpected error occurred: {e}")
+        print(f"Ocurrio un error inesperado: {e}")
 
 async def main():
     parser = argparse.ArgumentParser(description="Cliente para el Sistema de Scraping Web Distribuido")
