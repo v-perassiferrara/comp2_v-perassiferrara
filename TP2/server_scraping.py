@@ -2,7 +2,6 @@ import argparse
 import asyncio
 import aiohttp.web
 import datetime
-import socket
 from urllib.parse import urlparse
 
 from common.protocol import Protocol
@@ -25,13 +24,6 @@ def is_valid_url(url):
         return False
 
 
-def get_address_family(ip):
-    """Detecta si la IP es IPv4 o IPv6"""
-    try:
-        socket.inet_pton(socket.AF_INET6, ip)
-        return socket.AF_INET6
-    except:
-        return socket.AF_INET
 
 
 async def connect_to_processing_server(max_retries=3):
@@ -171,8 +163,8 @@ async def main():
     try:
         print("Servidor iniciado. Presiona Ctrl+C para detener.")
         await asyncio.Event().wait()  # Esperar indefinidamente
-    except KeyboardInterrupt:
-        print("\n -- Servidor de Scraping detenido. --")
+    except (asyncio.CancelledError, KeyboardInterrupt):
+        print("\n -- Servidor de Scraping detenido. --\n")
     finally:
         await runner.cleanup()
 
