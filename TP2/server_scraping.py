@@ -44,7 +44,7 @@ async def connect_to_processing_server(max_retries=3):
             )
             return reader, writer
         except Exception as e:
-            print(f"Error connecting to processing server (attempt {attempt + 1}/{max_retries}): {e}")
+            print(f"Error al conectar con el servidor de procesamiento (intento {attempt + 1}/{max_retries}): {e}")
             if attempt < max_retries - 1:
                 await asyncio.sleep(1)  # Esperar 1 segundo antes de reintentar
     return None, None
@@ -54,18 +54,18 @@ async def handle_scrape(request):
     url = request.query.get('url')
     if not url:
         return aiohttp.web.json_response(
-            {'status': 'error', 'message': 'Missing URL parameter'}, 
+            {'status': 'error', 'message': 'Parámetro URL no especificado'}, 
             status=400
         )
     
     # Validar formato de URL
     if not is_valid_url(url):
         return aiohttp.web.json_response(
-            {'status': 'error', 'message': 'Invalid URL format'}, 
+            {'status': 'error', 'message': 'Formato de URL inválido'}, 
             status=400
         )
 
-    print(f"Scraping request received for URL: {url}")
+    print(f"Solicitud de scraping recibida para URL: {url}")
 
     # Usar context manager para el cliente HTTP
     async with AsyncHTTPClient(timeout=30) as http_client:
@@ -98,7 +98,7 @@ async def handle_scrape(request):
                         processing_data = processing_response.get('processing_data', {})
                     else:
                         status = 'warning'
-                        error_message = f"Processing server error: {processing_response.get('message', 'Unknown error')}"
+                        error_message = f"Error del servidor de procesamiento: {processing_response.get('message', 'Error desconocido')}"
                         print(error_message)
                 finally:
                     writer.close()

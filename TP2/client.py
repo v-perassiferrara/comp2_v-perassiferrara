@@ -9,8 +9,8 @@ SCRAPING_SERVER_PORT = 8000
 
 async def fetch_and_display_results(url, server_ip, server_port):
     scrape_url = f"http://{server_ip}:{server_port}/scrape?url={url}"
-    print(f"Requesting scraping for: {url}")
-    print(f"Via server: {scrape_url}")
+    print(f"Solicitando scraping para: {url}")
+    print(f"A través del servidor: {scrape_url}")
 
     try:
         async with aiohttp.ClientSession() as session:

@@ -3,31 +3,31 @@ import os
 import sys
 import base64
 
-# Add the project root to the sys.path to allow imports from processor
+# Agrega el directorio raíz del proyecto a sys.path para permitir importaciones desde processor
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
 from processor.screenshot import capture_screenshot
 from processor.performance import analyze_performance
 from processor.image_processor import process_images
 
-# A simple, reliable URL for testing
+# Una URL simple y confiable para las pruebas
 TEST_URL = "http://example.com"
 
 class TestProcessor(unittest.TestCase):
 
     def test_capture_screenshot(self):
-        """Smoke test for the screenshot capture function."""
+        """Prueba de humo para la función de captura de pantalla."""
         screenshot_b64 = capture_screenshot(TEST_URL)
         self.assertIsNotNone(screenshot_b64)
         self.assertIsInstance(screenshot_b64, str)
-        # Check if it's valid base64
+        # Verificar si es base64 válido
         try:
             base64.b64decode(screenshot_b64)
         except Exception as e:
-            self.fail(f"Screenshot is not valid base64: {e}")
+            self.fail(f"La captura de pantalla no es un base64 válido: {e}")
 
     def test_analyze_performance(self):
-        """Smoke test for the performance analysis function."""
+        """Prueba de humo para la función de análisis de rendimiento."""
         performance_data = analyze_performance(TEST_URL)
         self.assertIsNotNone(performance_data)
         self.assertIsInstance(performance_data, dict)
@@ -38,14 +38,14 @@ class TestProcessor(unittest.TestCase):
         self.assertGreaterEqual(performance_data['num_requests'], 1)
 
     def test_process_images(self):
-        """Smoke test for the image processing function."""
-        # example.com has no images, so we expect an empty list.
-        # This tests that the function handles pages with no images gracefully.
+        """Prueba de humo para la función de procesamiento de imágenes."""
+        # example.com no tiene imágenes, por lo que esperamos una lista vacía.
+        # Esto prueba que la función maneja páginas sin imágenes correctamente.
         thumbnails = process_images(TEST_URL)
         self.assertIsNotNone(thumbnails)
         self.assertIsInstance(thumbnails, list)
         self.assertEqual(len(thumbnails), 0)
 
 if __name__ == '__main__':
-    # Note: These tests perform network requests and can be slow.
+    # Nota: Estas pruebas realizan solicitudes de red y pueden ser lentas.
     unittest.main()

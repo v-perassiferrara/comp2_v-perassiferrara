@@ -20,9 +20,9 @@ def run_processing_task(task_name, url, **kwargs):
         elif task_name == 'images':
             return process_images(url, **kwargs)
         else:
-            raise ValueError(f"Unknown task: {task_name}")
+            raise ValueError(f"Tarea desconocida: {task_name}")
     except Exception as e:
-        print(f"Error in task {task_name}: {e}")
+        print(f"Error en la tarea {task_name}: {e}")
         return None
 
 
@@ -38,18 +38,18 @@ class ProcessingHandler(socketserver.BaseRequestHandler):
             # Recibir longitud del mensaje
             length_bytes = self.request.recv(4)
             if not length_bytes:
-                print("Client disconnected.")
+                print("Cliente desconectado.")
                 return
 
             message_length = Protocol.decode_length(length_bytes)
             message_bytes = self.request.recv(message_length)
             request_data = Protocol.decode_message(message_bytes)
 
-            print(f"Received request: {request_data}")
+            print(f"Solicitud recibida: {request_data}")
 
             url = request_data.get('url')
             if not url:
-                response_data = {'status': 'error', 'message': 'Missing URL'}
+                response_data = {'status': 'error', 'message': 'URL no especificada'}
                 encoded_response = Protocol.encode_message(response_data)
                 self.request.sendall(encoded_response)
                 return
@@ -142,7 +142,7 @@ def main():
         print("Servidor listo. Presiona Ctrl+C para detener.")
         server.serve_forever()
     except KeyboardInterrupt:
-        print("\n⏹ Servidor de Procesamiento detenido.")
+        print("\n -- Servidor de Procesamiento detenido. --")
     except Exception as e:
         print(f"Error en el servidor: {e}")
     finally:

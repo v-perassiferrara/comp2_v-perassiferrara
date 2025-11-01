@@ -2,7 +2,7 @@ import unittest
 import os
 import sys
 
-# Add the project root to the sys.path to allow imports from scraper
+# Agrega el directorio raíz del proyecto a sys.path para permitir importaciones desde scraper
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
 from scraper.html_parser import HTMLParser
@@ -10,21 +10,21 @@ from scraper.html_parser import HTMLParser
 class TestHTMLParser(unittest.TestCase):
 
     def test_extract_title(self):
-        """Tests that the title is correctly extracted from HTML."""
+        """Prueba que el título se extraiga correctamente del HTML."""
         html_content = "<html><head><title>Página de Prueba</title></head><body></body></html>"
         soup = HTMLParser.parse_html(html_content)
         title = HTMLParser.extract_title(soup)
         self.assertEqual(title, "Página de Prueba")
 
     def test_extract_title_no_title(self):
-        """Tests behavior when no title tag is present."""
+        """Prueba el comportamiento cuando no hay etiqueta de título."""
         html_content = "<html><head></head><body></body></html>"
         soup = HTMLParser.parse_html(html_content)
         title = HTMLParser.extract_title(soup)
         self.assertEqual(title, "Sin título")
 
     def test_count_images(self):
-        """Tests that the number of images is counted correctly."""
+        """Prueba que el número de imágenes se cuente correctamente."""
         html_content = """
         <html><body>
             <img src="image1.jpg">
@@ -37,14 +37,14 @@ class TestHTMLParser(unittest.TestCase):
         self.assertEqual(count, 3)
 
     def test_count_images_no_images(self):
-        """Tests behavior when there are no images."""
+        """Prueba el comportamiento cuando no hay imágenes."""
         html_content = "<html><body><p>No hay imágenes.</p></body></html>"
         soup = HTMLParser.parse_html(html_content)
         count = HTMLParser.count_images(soup)
         self.assertEqual(count, 0)
 
     def test_extract_links(self):
-        """Tests that links are extracted and converted to absolute paths."""
+        """Prueba que los enlaces se extraigan y se conviertan a rutas absolutas."""
         html_content = """
         <html><body>
             <a href="/page1.html">Página 1</a>
@@ -62,7 +62,7 @@ class TestHTMLParser(unittest.TestCase):
             "http://test.com/page3.html"
         ]
         self.assertEqual(len(links), 3)
-        self.assertCountEqual(links, expected_links) # Use assertCountEqual for order-insensitive comparison
+        self.assertCountEqual(links, expected_links) # Usa assertCountEqual para una comparación insensible al orden
 
 if __name__ == '__main__':
     unittest.main()
