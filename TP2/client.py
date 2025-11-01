@@ -8,7 +8,9 @@ SCRAPING_SERVER_IP = '127.0.0.1'
 SCRAPING_SERVER_PORT = 8000
 
 async def fetch_and_display_results(url, server_ip, server_port):
-    scrape_url = f"http://{server_ip}:{server_port}/scrape?url={url}"
+    # Envolver la IP con corchetes si es una direccion IPv6
+    server_ip_formatted = f"[{server_ip}]" if ":" in server_ip else server_ip
+    scrape_url = f"http://{server_ip_formatted}:{server_port}/scrape?url={url}"
     print(f"Solicitando scraping para: {url}")
     print(f"A través del servidor: {scrape_url}")
 
