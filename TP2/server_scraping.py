@@ -172,7 +172,7 @@ async def main():
         print("Servidor iniciado. Presiona Ctrl+C para detener.")
         await asyncio.Event().wait()  # Esperar indefinidamente
     except KeyboardInterrupt:
-        print("\n⏹ Servidor de Scraping detenido.")
+        print("\n -- Servidor de Scraping detenido. --")
     finally:
         await runner.cleanup()
 
