@@ -1,0 +1,15 @@
+27/03/2024, 08:12 - Messages and calls are end-to-end encrypted. Only people in this chat can read, listen to, or share them. Learn more.
+27/03/2024, 09:17 - Julián (Soporte): Estamos ajustando la carga del servidor. Te aviso cuando normalice.
+27/03/2024, 11:02 - +54 9 11 3987-1951: El sistema me desconecta cada 10 minutos.
+27/03/2024, 11:40 - +54 9 261 5267-9519: El sistema no calcula el IVA en las facturas.
+27/03/2024, 13:14 - +54 9 223 2209-4980: Mi licencia vence hoy. ¿Se renueva sola?
+27/03/2024, 14:13 - Julián (Soporte): Borrá caché y cookies, reiniciá el navegador y probá de nuevo.
+27/03/2024, 14:36 - Martín (Soporte): Te la reenvío al correo registrado.
+27/03/2024, 14:37 - Martín (Soporte): ¿Podés enviarme captura del error? <Media omitted>
+27/03/2024, 14:56 - +54 9 261 6430-7841: El sistema no calcula el IVA en las facturas.
+27/03/2024, 16:35 - Carla (Soporte): Te paso el formulario para cambio de titular.
+27/03/2024, 16:59 - +54 9 343 4519-7105: ¿Cómo descargo las ventas del mes?
+27/03/2024, 17:36 - +54 9 381 6819-1867: El archivo CSV me da error 'columna faltante'.
+27/03/2024, 17:37 - +54 9 381 6819-1867: https://drive.google.com/file/d/aa594409428/view?usp=drive_link
+27/03/2024, 17:48 - Diego (Soporte): Te envío un enlace para restablecer acceso.
+27/03/2024, 19:39 - +54 9 299 4050-2364: Me figura saldo negativo y no puedo facturar.
