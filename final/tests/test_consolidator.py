@@ -65,3 +65,46 @@ def test_consolidate_results_with_empty_or_none():
     assert final_stats["hourly_distribution"] == {"14": 2}
     assert final_stats["daily_distribution"] == {"Viernes": 2}
     assert final_stats["top_words"] == [("gracias", 2)]
+
+def test_consolidate_results_empty_queue():
+    """Test that an empty queue with total_sub_chunks=0 returns an empty result."""
+    result_queue = Queue()
+    total_sub_chunks = 0
+
+    final_stats = consolidate_results(result_queue, total_sub_chunks)
+
+    assert final_stats["total_messages"] == 0
+    assert final_stats["users"] == {}
+    assert final_stats["hourly_distribution"] == {}
+    assert final_stats["daily_distribution"] == {}
+    assert final_stats["top_words"] == []
+
+def test_consolidate_results_with_partial_data():
+    """Test consolidation handles results with missing keys."""
+    result_queue = Queue()
+    total_sub_chunks = 2
+
+    # Result with only messages and users
+    result1 = {
+        "total_messages": 5,
+        "users": Counter({"user1": 5}),
+    }
+
+    # Result with only hourly and daily distribution
+    result2 = {
+        "total_messages": 3,
+        "hourly_distribution": Counter({"10": 3}),
+        "daily_distribution": Counter({"Martes": 3}),
+    }
+
+    result_queue.put(result1)
+    result_queue.put(result2)
+
+    final_stats = consolidate_results(result_queue, total_sub_chunks)
+
+    # Assertions
+    assert final_stats["total_messages"] == 8
+    assert final_stats["users"] == {"user1": 5}
+    assert final_stats["hourly_distribution"] == {"10": 3}
+    assert final_stats["daily_distribution"] == {"Martes": 3}
+    assert final_stats["top_words"] == []

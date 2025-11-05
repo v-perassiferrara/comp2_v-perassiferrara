@@ -46,3 +46,20 @@ def test_process_large_chunk():
     }
     assert result["hourly_distribution"] == {"09": 1, "11": 1}
     assert result["daily_distribution"] == {"Miércoles": 2}
+
+
+def test_process_large_chunk_empty_and_invalid_input():
+    """Test that the main task handles empty or invalid data chunks."""
+    # Test with empty string
+    empty_result = process_large_chunk("")
+    assert empty_result == {}
+
+    # Test with only invalid lines
+    invalid_data = (
+        "Messages and calls are end-to-end encrypted.\n"
+        "\n"
+        "Some other system message without a colon."
+    )
+    invalid_result = process_large_chunk(invalid_data)
+    assert invalid_result["total_messages"] == 0
+    assert invalid_result["users"] == {}
