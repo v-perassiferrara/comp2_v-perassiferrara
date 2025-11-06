@@ -48,12 +48,23 @@ Cliente TCP ──→ Servidor asyncio ──→ Redis ──→ 4 Workers Celer
 
 ## Estadísticas Extraídas
 
-- Total de mensajes, mensajes por usuario (empleado/agente), palabras clave (más usadas), distribución horaria/semanal
-- Longitud promedio, total procesado, tiempo de ejecución
+- Total de mensajes
+- Mensajes por usuario (empleado/agente)
+- Palabras clave (más usadas)
+- Distribución horaria/semanal
+- Longitud promedio de mensajes
+- Tiempo de ejecución
 
 ## Tecnologías
 
-Python 3.10+ | asyncio | Celery | Redis | multiprocessing.Pool | socket IPv4/IPv6 | argparse | Docker
+- Python 3.10+
+- asyncio
+- Celery
+- Redis
+- multiprocessing.Pool
+- socket IPv4/IPv6
+- argparse
+- Docker
 
 ## Justificaciones Técnicas
 

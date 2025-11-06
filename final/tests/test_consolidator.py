@@ -10,6 +10,7 @@ def test_consolidate_results_basic():
     # Mock result from sub-process 1
     result1 = {
         "total_messages": 5,
+        "total_message_length": 100,
         "users": Counter({"user1": 3, "user2": 2}),
         "hourly_distribution": Counter({"09": 5}),
         "daily_distribution": Counter({"Lunes": 5}),
@@ -19,6 +20,7 @@ def test_consolidate_results_basic():
     # Mock result from sub-process 2
     result2 = {
         "total_messages": 3,
+        "total_message_length": 50,
         "users": Counter({"user1": 1, "user3": 2}),
         "hourly_distribution": Counter({"09": 1, "10": 2}),
         "daily_distribution": Counter({"Lunes": 1, "Martes": 2}),
@@ -32,6 +34,7 @@ def test_consolidate_results_basic():
 
     # Assertions
     assert final_stats["total_messages"] == 8
+    assert final_stats["total_message_length"] == 150
     assert final_stats["users"] == {"user1": 4, "user2": 2, "user3": 2}
     assert final_stats["hourly_distribution"] == {"09": 6, "10": 2}
     assert final_stats["daily_distribution"] == {"Lunes": 6, "Martes": 2}
@@ -48,6 +51,7 @@ def test_consolidate_results_with_empty_or_none():
 
     result1 = {
         "total_messages": 2,
+        "total_message_length": 42,
         "users": Counter({"user1": 2}),
         "hourly_distribution": Counter({"14": 2}),
         "daily_distribution": Counter({"Viernes": 2}),
@@ -61,6 +65,7 @@ def test_consolidate_results_with_empty_or_none():
     final_stats = consolidate_results(result_queue, total_sub_chunks)
 
     assert final_stats["total_messages"] == 2
+    assert final_stats["total_message_length"] == 42
     assert final_stats["users"] == {"user1": 2}
     assert final_stats["hourly_distribution"] == {"14": 2}
     assert final_stats["daily_distribution"] == {"Viernes": 2}
@@ -74,6 +79,7 @@ def test_consolidate_results_empty_queue():
     final_stats = consolidate_results(result_queue, total_sub_chunks)
 
     assert final_stats["total_messages"] == 0
+    assert final_stats["total_message_length"] == 0
     assert final_stats["users"] == {}
     assert final_stats["hourly_distribution"] == {}
     assert final_stats["daily_distribution"] == {}
@@ -87,6 +93,7 @@ def test_consolidate_results_with_partial_data():
     # Result with only messages and users
     result1 = {
         "total_messages": 5,
+        "total_message_length": 100,
         "users": Counter({"user1": 5}),
     }
 
@@ -104,6 +111,7 @@ def test_consolidate_results_with_partial_data():
 
     # Assertions
     assert final_stats["total_messages"] == 8
+    assert final_stats["total_message_length"] == 100
     assert final_stats["users"] == {"user1": 5}
     assert final_stats["hourly_distribution"] == {"10": 3}
     assert final_stats["daily_distribution"] == {"Martes": 3}

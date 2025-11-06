@@ -21,6 +21,9 @@ def test_process_sub_chunk_wrapper():
 
     result = result_queue.get()
     assert result["total_messages"] == 2
+    # len("estamos ajustando la carga del servidor. te aviso cuando normalice.") = 69
+    # len("el sistema me desconecta cada 10 minutos.") = 41
+    assert result["total_message_length"] == 108
     assert result["users"] == {
         "Julián (Soporte)": 1,
         "+54 9 11 3987-1951": 1,
@@ -53,6 +56,7 @@ def test_process_large_chunk(mock_pool):
     result = process_large_chunk(chunk_data)
 
     assert result["total_messages"] == 2
+    assert result["total_message_length"] == 108
     assert result["users"] == {
         "Julián (Soporte)": 1,
         "+54 9 11 3987-1951": 1,
@@ -79,4 +83,5 @@ def test_process_large_chunk_empty_and_invalid_input(mock_pool):
     )
     invalid_result = process_large_chunk(invalid_data)
     assert invalid_result["total_messages"] == 0
+    assert invalid_result["total_message_length"] == 0
     assert invalid_result["users"] == {}

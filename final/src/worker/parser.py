@@ -55,12 +55,14 @@ def extract_stats_from_subchunk(lines_list):
     daily_dist = Counter()
     top_words = Counter()
     total_msgs = 0
+    total_msg_length = 0
 
     for line in lines_list:
         data = parse_whatsapp_line(line)
 
         if data:
             total_msgs += 1
+            total_msg_length += len(data["message"])
             users[data["user"]] += 1
             hourly_dist[data["hour"]] += 1
             daily_dist[data["day_of_week"]] += 1
@@ -74,6 +76,7 @@ def extract_stats_from_subchunk(lines_list):
     # Devolvemos el "JSON parcial del sub-chunk" como un diccionario
     return {
         "total_messages": total_msgs,
+        "total_message_length": total_msg_length,
         "users": users,
         "hourly_distribution": hourly_dist,
         "daily_distribution": daily_dist,

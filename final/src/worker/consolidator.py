@@ -13,6 +13,7 @@ def consolidate_results(result_queue, total_sub_chunks):
     total_daily = Counter()
     total_words = Counter()
     total_messages = 0
+    total_message_length = 0
 
     processed_sub_chunks = 0
     while processed_sub_chunks < total_sub_chunks:
@@ -21,6 +22,7 @@ def consolidate_results(result_queue, total_sub_chunks):
             result = result_queue.get()
             if result:
                 total_messages += result.get("total_messages", 0)
+                total_message_length += result.get("total_message_length", 0)
                 total_users.update(result.get("users", {}))
                 total_hourly.update(result.get("hourly_distribution", {}))
                 total_daily.update(result.get("daily_distribution", {}))
@@ -34,6 +36,7 @@ def consolidate_results(result_queue, total_sub_chunks):
     # Devuelve el diccionario consolidado final
     return {
         "total_messages": total_messages,
+        "total_message_length": total_message_length,
         "users": dict(total_users),
         "hourly_distribution": dict(total_hourly),
         "daily_distribution": dict(total_daily),

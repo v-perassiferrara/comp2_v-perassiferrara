@@ -44,6 +44,13 @@ def test_extract_stats_from_subchunk():
     # Should only process the 3 valid messages
     assert result["total_messages"] == 3
 
+    # Check total message length
+    # len("estamos ajustando la carga del servidor. te aviso cuando normalice.") = 67
+    # len("el sistema me desconecta cada 10 minutos.") = 41
+    # len("problema resuelto.") = 18
+    # Total = 67 + 41 + 18 = 126
+    assert result["total_message_length"] == 126
+
     # Check user stats
     assert len(result["users"]) == 2
     assert result["users"]["Julián (Soporte)"] == 2
