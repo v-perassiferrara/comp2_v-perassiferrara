@@ -1,5 +1,6 @@
 from multiprocessing import Pool, Queue, Value
 
+from src.shared.utils import split_list_into_chunks
 from src.worker.celery_app import app
 from src.worker.consolidator import consolidate_results
 from src.worker.parser import extract_stats_from_subchunk
@@ -39,9 +40,7 @@ def process_large_chunk(self, chunk_data):
         return {}
 
     # Dividir el chunk grande en sub-chunks más pequeños
-    sub_chunks = [
-        lines[i : i + SUB_CHUNK_SIZE] for i in range(0, len(lines), SUB_CHUNK_SIZE)
-    ]
+    sub_chunks = split_list_into_chunks(lines, SUB_CHUNK_SIZE)
     num_sub_chunks = len(sub_chunks)
 
     # Queue y Value compartidos entre procesos para contar los sub-chunks procesados y enviar los resultados
