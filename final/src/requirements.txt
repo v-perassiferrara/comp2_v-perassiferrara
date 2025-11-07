@@ -1,2 +1,5 @@
 celery
 redis
+pytest
+pytest-asyncio
+pytest-cov

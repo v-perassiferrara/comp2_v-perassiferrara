@@ -30,7 +30,7 @@ def consolidate_results(result_queue, total_sub_chunks):
             processed_sub_chunks += 1
         except Exception as e:
             # Manejar posible error en la cola o en los datos
-            print(f"Error consolidating result: {e}")
+            print(f"Error consolidando resultado: {e}")
             processed_sub_chunks += 1  # Asegurarse de no quedar en un bucle infinito
 
     # Devuelve el diccionario consolidado final

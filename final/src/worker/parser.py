@@ -4,7 +4,58 @@ from datetime import datetime
 
 
 # Palabras que no se agregan a la lista de más frecuentes
-STOPWORDS = set(["de", "la", "que", "el", "en", "y", "a", "los", "del", "con", ...])
+STOPWORDS = set(
+    [
+        "de",
+        "la",
+        "que",
+        "el",
+        "en",
+        "y",
+        "a",
+        "los",
+        "del",
+        "con",
+        "un",
+        "una",
+        "por",
+        "para",
+        "no",
+        "se",
+        "mi",
+        "me",
+        "te",
+        "q",
+        "es",
+        "al",
+        "si",
+        "ya",
+        "hola",
+        "buenos",
+        "días",
+        "como",
+        "puedo",
+        "ayudarte",
+        "claro",
+        "dime",
+        "cual",
+        "tu",
+        "le",
+        "<media",
+        "omitted>",
+        "http",
+        "httpss",
+        "www",
+        "eso",
+        "estamos",
+        "cuando",
+        "cada",
+        "te",
+        "aviso",
+        "cuando",
+        "normalice",
+    ]
+)
 
 WEEK_DAYS = ["Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado", "Domingo"]
 

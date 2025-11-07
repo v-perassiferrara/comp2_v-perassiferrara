@@ -37,7 +37,7 @@ def _run_starmap_serially(func, args):
         func(*arg_tuple)
 
 
-@patch("src.worker.tasks.Pool")
+@patch("multiprocessing.Pool")
 def test_process_large_chunk(mock_pool):
     """
     Unit test for the main task, mocking the multiprocessing.Pool
@@ -65,7 +65,7 @@ def test_process_large_chunk(mock_pool):
     assert result["daily_distribution"] == {"Miércoles": 2}
 
 
-@patch("src.worker.tasks.Pool")
+@patch("multiprocessing.Pool")
 def test_process_large_chunk_empty_and_invalid_input(mock_pool):
     """Test that the main task handles empty or invalid data chunks (with Pool mocked)."""
     mock_pool_instance = mock_pool.return_value.__enter__.return_value

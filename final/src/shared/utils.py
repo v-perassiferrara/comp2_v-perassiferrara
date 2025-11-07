@@ -1,6 +1,6 @@
 def split_list_into_chunks(data_list: list, chunk_size: int) -> list[list]:
     """
-    Toma una lista y la devuelve en pedazos de 'chunk_size'.
+    Toma una lista y la devuelve en pedazos de 'chunk_size' (lista de listas de tamaño 'chunk_size').
     """
     if not data_list:
         return []

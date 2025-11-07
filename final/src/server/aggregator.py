@@ -32,6 +32,6 @@ def aggregate_final_stats(results_list):
         "users": dict(total_users),
         "hourly_distribution": dict(total_hourly),
         "daily_distribution": dict(total_daily),
-        "top_words": total_words.most_common(20),
+        "top_words": total_words.most_common(10),
         "workers_used": len(results_list),
     }
