@@ -8,8 +8,12 @@ from celery import Celery
 # 'include' es una lista de módulos que se importarán cuando el worker inicie.
 app = Celery(
     "worker",
-    broker="redis://redis:6379/0",
-    backend="redis://redis:6379/1",
+    # Para probar en local
+    broker="redis://localhost:6379/0",
+    backend="redis://localhost:6379/1",
+    # Para usar con Docker
+    # broker="redis://redis:6379/0",
+    # backend="redis://redis:6379/1",
     include=["src.worker.tasks"],
 )
 

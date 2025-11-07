@@ -34,8 +34,6 @@ async def handle_client(reader: asyncio.StreamReader, writer: asyncio.StreamWrit
 
         print(f"[SERVER] Esperando datos de {addr}...")
 
-        # TODO: En el cliente, hacer shutdown al terminar de escribir para que no se quede bloqueado aca
-
         # Leer desde el reader hasta EOF (cliente cierra escritura)
         data = await reader.read()
         if not data:
