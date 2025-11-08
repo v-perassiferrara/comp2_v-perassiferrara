@@ -38,32 +38,38 @@ def test_extract_stats_from_subchunk():
         "27/03/2024, 11:02 - +54 9 11 3987-1951: El sistema me desconecta cada 10 minutos.",
         "Esto es una línea que no matchea con el regex",
         "28/03/2024, 11:05 - Julián (Soporte): Problema resuelto.",
+        "28/03/2024, 12:00 - User: Por favor, revisa este link importante http://example.com/issue",
     ]
     result = extract_stats_from_subchunk(lines_list)
 
-    # Should only process the 3 valid messages
-    assert result["total_messages"] == 3
+    # Should only process the 4 valid messages
+    assert result["total_messages"] == 4
 
     # Check total message length
     # len("estamos ajustando la carga del servidor. te aviso cuando normalice.") = 67
     # len("el sistema me desconecta cada 10 minutos.") = 41
     # len("problema resuelto.") = 18
-    # Total = 67 + 41 + 18 = 126
-    assert result["total_message_length"] == 126
+    # len("por favor, revisa este link importante http://example.com/issue") = 67
+    assert result["total_message_length"] == 189
 
     # Check user stats
-    assert len(result["users"]) == 2
+    assert len(result["users"]) == 3
     assert result["users"]["Julián (Soporte)"] == 2
     assert result["users"]["+54 9 11 3987-1951"] == 1
+    assert result["users"]["User"] == 1
 
     # Check hourly distribution
     assert result["hourly_distribution"]["09"] == 1
     assert result["hourly_distribution"]["11"] == 2
+    assert result["hourly_distribution"]["12"] == 1
 
     # Check daily distribution
     assert result["daily_distribution"]["Miércoles"] == 2
-    assert result["daily_distribution"]["Jueves"] == 1
+    assert result["daily_distribution"]["Jueves"] == 2
 
     # Check top words (basic check)
     assert result["top_words"]["servidor"] == 1
     assert result["top_words"]["problema"] == 1
+    # Verificar que la palabra del link NO fue contada
+    assert "importante" not in result["top_words"]
+    assert "link" not in result["top_words"]

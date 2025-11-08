@@ -1,5 +1,6 @@
 from src.server.aggregator import aggregate_final_stats
 
+
 def test_aggregate_final_stats_basic():
     """Test aggregation with two valid worker results."""
     results_list = [
@@ -26,12 +27,14 @@ def test_aggregate_final_stats_basic():
     assert final_stats["users"] == {"user1": 3, "user2": 1, "user3": 1}
     assert final_stats["hourly_distribution"] == {"09": 2, "10": 2, "11": 1}
     assert final_stats["daily_distribution"] == {"Lunes": 2, "Martes": 3}
-    top_words_dict = dict(final_stats["top_words"])
-    assert top_words_dict["hola"] == 4
-    assert top_words_dict["mundo"] == 2
-    assert top_words_dict["adios"] == 1
-    assert top_words_dict["gracias"] == 1
+    assert final_stats["top_words"] == {
+        "hola": 4,
+        "mundo": 2,
+        "adios": 1,
+        "gracias": 1,
+    }
     assert final_stats["workers_used"] == 2
+
 
 def test_aggregate_final_stats_with_failed_workers():
     """Test that aggregation handles empty or None results gracefully."""
@@ -53,8 +56,9 @@ def test_aggregate_final_stats_with_failed_workers():
     assert final_stats["users"] == {"user1": 10}
     assert final_stats["hourly_distribution"] == {"09": 10}
     assert final_stats["daily_distribution"] == {"Lunes": 10}
-    assert final_stats["top_words"] == [("test", 10)]
+    assert final_stats["top_words"] == {"test": 10}
     assert final_stats["workers_used"] == 3
+
 
 def test_aggregate_final_stats_empty_input():
     """Test aggregation with an empty list of results."""
@@ -64,14 +68,21 @@ def test_aggregate_final_stats_empty_input():
     assert final_stats["users"] == {}
     assert final_stats["hourly_distribution"] == {}
     assert final_stats["daily_distribution"] == {}
-    assert final_stats["top_words"] == []
+    assert final_stats["top_words"] == {}
     assert final_stats["workers_used"] == 0
+
 
 def test_aggregate_final_stats_zero_messages():
     """Test division-by-zero protection when total_messages is 0."""
     worker_results = [
-        {"total_messages": 0, "total_message_length": 0, "users": {},
-         "hourly_distribution": {}, "daily_distribution": {}, "top_words": []},
+        {
+            "total_messages": 0,
+            "total_message_length": 0,
+            "users": {},
+            "hourly_distribution": {},
+            "daily_distribution": {},
+            "top_words": [],
+        },
     ]
     final_stats = aggregate_final_stats(worker_results)
     assert final_stats["total_messages"] == 0
@@ -79,5 +90,5 @@ def test_aggregate_final_stats_zero_messages():
     assert final_stats["users"] == {}
     assert final_stats["hourly_distribution"] == {}
     assert final_stats["daily_distribution"] == {}
-    assert final_stats["top_words"] == []
+    assert final_stats["top_words"] == {}
     assert final_stats["workers_used"] == 1

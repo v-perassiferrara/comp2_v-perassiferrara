@@ -6,94 +6,98 @@ import pytest
 
 from src.server.server import handle_client
 
-# Marcador para todas las pruebas en este archivo, para que pytest-asyncio las maneje
 pytestmark = pytest.mark.asyncio
-
 
 @patch("src.server.server.aggregate_final_stats")
 @patch("src.server.server.AsyncResult")
 @patch("src.server.server.process_large_chunk")
 @patch("src.server.server.time")
-async def test_handle_client_full_flow(
-    mock_time, mock_process_chunk, mock_async_result, mock_aggregator
-):
-    """
-    Test de integración para handle_client, simulando todas las dependencias externas.
-    """
-    # 1. Configuración de Mocks
-    # --- Mock de time para controlar el tiempo de procesamiento ---
-    mock_time.time.side_effect = [1000.0, 1010.5]  # Inicio y fin
+@patch("src.server.server.asyncio.sleep", new_callable=AsyncMock)
+class TestHandleClient:
+    async def test_full_flow_with_polling(
+        self, mock_sleep, mock_time, mock_process_chunk, mock_async_result, mock_aggregator
+    ):
+        # ... (Misma lógica que el test_handle_client_full_flow_with_polling)
+        mock_time.time.side_effect = [1000.0, 1010.5]
+        mock_task_1, mock_task_2, mock_task_3 = MagicMock(id="t1"), MagicMock(id="t2"), MagicMock(id="t3")
+        mock_process_chunk.delay.side_effect = [mock_task_1, mock_task_2, mock_task_3]
+        mock_result_1, mock_result_2, mock_result_3 = MagicMock(), MagicMock(), MagicMock()
+        mock_result_1.ready.side_effect = [False, True]
+        mock_result_1.get.return_value = {"msg": 1}
+        mock_result_2.ready.side_effect = [False, False, True]
+        mock_result_2.get.return_value = {"msg": 2}
+        mock_result_3.ready.return_value = True
+        mock_result_3.get.return_value = {"msg": 3}
+        mock_async_result.side_effect = [mock_result_1, mock_result_2, mock_result_3]
+        mock_aggregator.return_value = {"final_messages": 100, "workers_used": 3}
+        test_chat_data = b"linea 1\nlinea 2\nlinea 3\nlinea 4\nlinea 5"
+        mock_reader = AsyncMock(spec=asyncio.StreamReader)
+        mock_reader.read.return_value = test_chat_data
+        mock_writer = MagicMock(spec=asyncio.StreamWriter)
+        mock_writer.drain = AsyncMock()
+        mock_writer.wait_closed = AsyncMock()
+        mock_writer.get_extra_info.return_value = ("127.0.0.1", 12345)
 
-    # --- Mock de la tarea de Celery ---
-    mock_task = MagicMock()
-    mock_process_chunk.delay.return_value = mock_task
-    mock_task.id = "test-task-id-123"
+        await handle_client(mock_reader, mock_writer)
 
-    # --- Mock del resultado de Celery (AsyncResult) ---
-    # Creamos una clase para simular el estado de "listo" de forma más robusta
-    class ReadySimulator:
-        def __init__(self):
-            self.calls = 0
-        def __call__(self):
-            self.calls += 1
-            return self.calls % 2 == 0
+        assert mock_process_chunk.delay.call_count == 3
+        assert mock_sleep.call_count == 3
+        mock_aggregator.assert_called_once_with([{"msg": 1}, {"msg": 2}, {"msg": 3}])
+        mock_writer.write.assert_called_once()
+        response_json = json.loads(mock_writer.write.call_args[0][0].decode("utf-8"))
+        assert response_json["final_messages"] == 100
+        assert response_json["processing_time"] == 10.5
 
-    mock_celery_result_instance = MagicMock()
-    mock_celery_result_instance.ready.side_effect = ReadySimulator()
-    mock_celery_result_instance.get.return_value = {"total_messages": 100}
-    mock_async_result.return_value = mock_celery_result_instance
+    async def test_no_data(
+        self, mock_sleep, mock_time, mock_process_chunk, mock_async_result, mock_aggregator
+    ):
+        mock_reader = AsyncMock(spec=asyncio.StreamReader)
+        mock_reader.read.return_value = b""
+        mock_writer = MagicMock(spec=asyncio.StreamWriter)
+        mock_writer.wait_closed = AsyncMock()
+        mock_writer.get_extra_info.return_value = ("127.0.0.1", 12345)
 
-    # --- Mock del agregador final ---
-    mock_aggregator.return_value = {"final_messages": 100, "workers_used": 1}
+        await handle_client(mock_reader, mock_writer)
 
-    # 2. Simulación del Cliente (Reader y Writer)
-    # --- Datos que el cliente falso envía ---
-    test_chat_data = b"linea 1\nlinea 2\nlinea 3"
-    # --- Mock del StreamReader ---
-    mock_reader = AsyncMock(spec=asyncio.StreamReader)
-    mock_reader.read.return_value = test_chat_data
+        mock_writer.write.assert_not_called()
+        mock_writer.close.assert_called_once()
+        mock_writer.wait_closed.assert_called_once()
 
-    # --- Mock del StreamWriter ---
-    mock_writer = MagicMock(spec=asyncio.StreamWriter)
-    # Usamos un AsyncMock para los métodos awaitable
-    mock_writer.drain = AsyncMock()
-    mock_writer.wait_closed = AsyncMock()
-    # Simular get_extra_info para los logs
-    mock_writer.get_extra_info.return_value = ("127.0.0.1", 12345)
+    async def test_empty_file(
+        self, mock_sleep, mock_time, mock_process_chunk, mock_async_result, mock_aggregator
+    ):
+        mock_reader = AsyncMock(spec=asyncio.StreamReader)
+        mock_reader.read.return_value = b"\n \t \n"
+        mock_writer = MagicMock(spec=asyncio.StreamWriter)
+        mock_writer.wait_closed = AsyncMock()
+        mock_writer.get_extra_info.return_value = ("127.0.0.1", 12345)
 
-    # 3. Ejecución de la función a probar
-    # En lugar de iniciar un servidor, llamamos directamente a la corrutina
-    # que maneja al cliente, pasándole los mocks.
-    await handle_client(mock_reader, mock_writer)
+        await handle_client(mock_reader, mock_writer)
 
-    # 4. Verificaciones (Asserts)
-    # --- Verificar que se leyó del cliente ---
-    mock_reader.read.assert_called_once()
+        mock_writer.write.assert_called_once()
+        written_data = mock_writer.write.call_args[0][0].decode("utf-8")
+        assert "error" in written_data.lower()
+        mock_writer.close.assert_called_once()
 
-    # --- Verificar que se llamó a Celery ---
-    # El número de tareas debe ser igual al número de chunks creados
-    num_chunks = len(mock_process_chunk.delay.call_args_list)
-    assert mock_process_chunk.delay.call_count == num_chunks
+    async def test_exception_handling(
+        self, mock_sleep, mock_time, mock_process_chunk, mock_async_result, mock_aggregator
+    ):
+        mock_time.time.side_effect = [1000.0, 1010.5]
+        mock_process_chunk.delay.return_value = MagicMock(id="t1")
+        mock_async_result.return_value = MagicMock(ready=lambda: True, get=lambda: {"msg": 1})
+        mock_aggregator.side_effect = Exception("KABOOM")
+        mock_reader = AsyncMock(spec=asyncio.StreamReader)
+        mock_reader.read.return_value = b"linea 1\nlinea 2"
+        mock_writer = MagicMock(spec=asyncio.StreamWriter)
+        mock_writer.drain = AsyncMock()
+        mock_writer.wait_closed = AsyncMock()
+        mock_writer.get_extra_info.return_value = ("127.0.0.1", 12345)
 
-    # --- Verificar que se esperó por el resultado ---
-    # ready() se llama 2 veces (False, True) por cada chunk
-    assert mock_celery_result_instance.ready.call_count == num_chunks * 2
-    assert mock_celery_result_instance.get.call_count == num_chunks
+        await handle_client(mock_reader, mock_writer)
 
-    # --- Verificar que se llamó al agregador con los resultados ---
-    mock_aggregator.assert_called_once_with([{"total_messages": 100}] * num_chunks)
-
-    # --- Verificar la respuesta enviada al cliente ---
-    mock_writer.write.assert_called_once()
-    # Capturar lo que se escribió, decodificarlo y parsearlo
-    written_data = mock_writer.write.call_args[0][0]
-    response_json = json.loads(written_data.decode("utf-8"))
-
-    # Verificar que el JSON final contiene los datos del agregador y el tiempo
-    assert response_json["final_messages"] == 100
-    assert response_json["workers_used"] == 1
-    assert response_json["processing_time"] == 10.5  # 1010.5 - 1000.0
-
-    # --- Verificar que la conexión se cerró ---
-    mock_writer.close.assert_called_once()
-    mock_writer.wait_closed.assert_called_once()
+        mock_aggregator.assert_called_once()
+        mock_writer.write.assert_called_once()
+        response_json = json.loads(mock_writer.write.call_args[0][0].decode("utf-8"))
+        assert "error" in response_json
+        assert response_json["error"] == "KABOOM"
+        mock_writer.close.assert_called_once()

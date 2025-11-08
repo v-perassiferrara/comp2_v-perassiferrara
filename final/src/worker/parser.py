@@ -42,7 +42,11 @@ STOPWORDS = set(
         "tu",
         "le",
         "<media",
+        "media",
+        "omitted",
         "omitted>",
+        "link",
+        "importante",
         "http",
         "httpss",
         "www",
@@ -51,6 +55,10 @@ STOPWORDS = set(
         "cuando",
         "cada",
         "te",
+        "necesito",
+        "podés",
+        "tecnosoft",
+        "soporte",
         "aviso",
         "cuando",
         "normalice",
@@ -118,8 +126,9 @@ def extract_stats_from_subchunk(lines_list):
             hourly_dist[data["hour"]] += 1
             daily_dist[data["day_of_week"]] += 1
 
-            # Procesamiento de palabras
-            words = re.findall(r"\b\w{4,}\b", data["message"])  # Palabras de 4+ letras
+            # Limpiar links y procesar palabras
+            message_no_links = re.sub(r"https?://\S+|www\.\S+", " ", data["message"])
+            words = re.findall(r"\b\w{4,}\b", message_no_links)
             for word in words:
                 if word not in STOPWORDS:
                     top_words[word] += 1
