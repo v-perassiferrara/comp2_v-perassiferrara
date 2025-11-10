@@ -1,6 +1,7 @@
 import asyncio
 import json
 import time
+import socket  # Importar el módulo socket
 from celery.result import AsyncResult
 
 from src.worker.celery_app import app as celery_app
@@ -143,7 +144,23 @@ async def main():
     """
     Función principal que inicia el servidor asyncio.
     """
-    server = await asyncio.start_server(handle_client, DEFAULT_HOST, DEFAULT_PORT)
+    # Creamos el socket a mano para IPv6 (para permitir dual stack)
+    sock = socket.socket(socket.AF_INET6, socket.SOCK_STREAM)
+
+    # Desactivar IPV6_V6ONLY para poder aceptar conexiones IPv4 también
+    sock.setsockopt(socket.IPPROTO_IPV6, socket.IPV6_V6ONLY, 0)
+
+    # Permitir reutilización de dirección para evitar errores
+    sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+
+    # Bindear a la dirección IPv6 y al puerto
+    sock.bind((DEFAULT_HOST, DEFAULT_PORT))
+
+    # Pasar el socket pre-configurado a asyncio.start_server
+    server = await asyncio.start_server(
+        handle_client,
+        sock=sock,
+    )
 
     addrs = ", ".join(str(sock.getsockname()) for sock in server.sockets)
     print(f"[SERVER] Escuchando en {addrs} (Puerto {DEFAULT_PORT})...")
