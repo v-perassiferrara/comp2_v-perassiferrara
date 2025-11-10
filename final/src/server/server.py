@@ -16,6 +16,14 @@ from src.shared.utils import (
 
 # Número de workers/chunks a usar
 NUM_WORKERS = 4
+POLLING_TIMEOUT = 120  # 2 minutos de espera máxima en total, para evitar que se cuelgue
+
+
+async def _wait_for_one_task(async_result: AsyncResult):
+    """Espera a que un resultado de Celery esté listo."""
+    while not async_result.ready():
+        await asyncio.sleep(1.0)
+    return async_result.get()
 
 
 async def handle_client(reader: asyncio.StreamReader, writer: asyncio.StreamWriter):
@@ -70,23 +78,32 @@ async def handle_client(reader: asyncio.StreamReader, writer: asyncio.StreamWrit
 
         print(f"[SERVER] Tareas despachadas a Celery: {task_ids}")
 
-        # Polling de resultados
+        # Polling de resultados con timeout global
+        try:
+            # Creamos una lista de corrutinas, una para cada tarea
+            waiter_coroutines = [
+                _wait_for_one_task(AsyncResult(task_id, app=celery_app))
+                for task_id in task_ids
+            ]
 
-        # Esperamos los resultados del backend sin bloquear el server
-        results = []
-        for task_id in task_ids:
-            # Para verificar el estado de la tarea
-            async_result = AsyncResult(task_id, app=celery_app)
+            print(
+                f"[SERVER] Esperando {len(waiter_coroutines)} resultados con un timeout de {POLLING_TIMEOUT}s..."
+            )
 
-            while not async_result.ready():
-                print(f"[SERVER] Esperando por {task_id}...")
+            # asyncio.gather corre todas las corrutinas concurrentemente
 
-                await asyncio.sleep(1.0)  # Cede control al event loop por 1 seg
-                # Mientras tanto, el server puede atender a otros clientes
+            # asyncio.wait_for le pone un límite de tiempo a la espera total
+            results = await asyncio.wait_for(
+                asyncio.gather(*waiter_coroutines), timeout=POLLING_TIMEOUT
+            )
+            print("[SERVER] Todas las tareas completadas.")
 
-            # La tarea terminó, guardamos el resultado
-            print(f"[SERVER] Tarea {task_id} completada.")
-            results.append(async_result.get())
+        except asyncio.TimeoutError:
+            # Si se agota el tiempo de espera, salta una excepción que será
+            # capturada por el manejador de errores principal de la función.
+            raise Exception(
+                f"Tiempo de espera agotado ({POLLING_TIMEOUT}s) para recibir la respuesta de los workers."
+            )
 
         # Unificar resultados con el agregador
 
