@@ -1,0 +1,38 @@
+services:
+  # Servicio Redis
+  redis:
+    image: "redis:alpine"
+    ports:
+      # Exponemos el puerto al host (útil para debug)
+      - "6379:6379"
+
+  # Servicio del server asyncio
+  server:
+    build:
+      context: .. # la raíz está en la carpeta anterior
+      dockerfile: docker/Dockerfile.server # Usa el Dockerfile de server
+
+    ports:
+      # localhost de IPv4
+      - "127.0.0.1:8888:8888"
+
+      # localhost de IPv6
+      - "[::1]:8888:8888"
+
+    depends_on:
+      # espera a que Redis esté listo antes de iniciar
+      - redis
+
+  # Servicio del worker celery
+  worker:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile.worker # Usa el Dockerfile de worker
+    depends_on:
+      - redis
+    deploy:
+      replicas: 4 # Levanta 4 instancias por defecto
+
+networks:
+  default:
+    enable_ipv6: true
