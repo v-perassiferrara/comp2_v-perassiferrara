@@ -37,7 +37,7 @@ Navega a la carpeta `docker/` y levanta todos los servicios.
 cd docker
 
 # Levantar todo (y reconstruir si hay cambios)
-docker-compose up --build
+docker compose up --build
 ```
 
 > Deja esta terminal abierta. Verás los logs de los 6 contenedores (1 Server, 1 Redis, 4 Workers).
