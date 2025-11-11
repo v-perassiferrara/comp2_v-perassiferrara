@@ -117,6 +117,9 @@ def main():
         print(f"\nError de Socket: {e}")
         print(f"¿Está el servidor corriendo en '{host}':'{port}'?")
         sys.exit(1)
+    except KeyboardInterrupt:
+        print("\n\nOperación cancelada por el usuario.")
+        sys.exit(0)
     except Exception as e:
         print(f"Ocurrió un error inesperado: {e}")
         sys.exit(1)

@@ -38,11 +38,8 @@ def test_consolidate_results_basic():
     assert final_stats["users"] == {"user1": 4, "user2": 2, "user3": 2}
     assert final_stats["hourly_distribution"] == {"09": 6, "10": 2}
     assert final_stats["daily_distribution"] == {"Lunes": 6, "Martes": 2}
-    
-    top_words_dict = dict(final_stats["top_words"])
-    assert top_words_dict["hola"] == 4
-    assert top_words_dict["test"] == 2
-    assert top_words_dict["mundo"] == 2
+    assert final_stats["top_words"] == {"hola": 4, "test": 2, "mundo": 2}
+
 
 def test_consolidate_results_with_empty_or_none():
     """Test that consolidation handles empty or None results gracefully."""
@@ -69,7 +66,8 @@ def test_consolidate_results_with_empty_or_none():
     assert final_stats["users"] == {"user1": 2}
     assert final_stats["hourly_distribution"] == {"14": 2}
     assert final_stats["daily_distribution"] == {"Viernes": 2}
-    assert final_stats["top_words"] == [("gracias", 2)]
+    assert final_stats["top_words"] == {"gracias": 2}
+
 
 def test_consolidate_results_empty_queue():
     """Test that an empty queue with total_sub_chunks=0 returns an empty result."""
@@ -83,7 +81,8 @@ def test_consolidate_results_empty_queue():
     assert final_stats["users"] == {}
     assert final_stats["hourly_distribution"] == {}
     assert final_stats["daily_distribution"] == {}
-    assert final_stats["top_words"] == []
+    assert final_stats["top_words"] == {}
+
 
 def test_consolidate_results_with_partial_data():
     """Test consolidation handles results with missing keys."""
@@ -115,4 +114,4 @@ def test_consolidate_results_with_partial_data():
     assert final_stats["users"] == {"user1": 5}
     assert final_stats["hourly_distribution"] == {"10": 3}
     assert final_stats["daily_distribution"] == {"Martes": 3}
-    assert final_stats["top_words"] == []
+    assert final_stats["top_words"] == {}

@@ -101,3 +101,83 @@ class TestHandleClient:
         assert "error" in response_json
         assert response_json["error"] == "KABOOM"
         mock_writer.close.assert_called_once()
+
+
+
+async def test_server_startup_and_dual_stack():
+    """
+    Test de integración que inicia un servidor real en un puerto aleatorio
+    y verifica la conectividad dual-stack.
+    """
+    from src.server.server import main as server_main
+
+    # Iniciar el servidor en una tarea de fondo
+    server_task = asyncio.create_task(server_main())
+    
+    # Darle un momento para que arranque
+    await asyncio.sleep(0.1)
+
+    # Obtener el puerto asignado por el sistema operativo (puerto 0)
+    # Esto es más robusto que usar un puerto fijo que podría estar en uso.
+    # Sin embargo, para este test, usaremos el puerto por defecto y asumiremos que está libre.
+    port = 8888
+
+    try:
+        # Probar conexión IPv4
+        try:
+            reader_v4, writer_v4 = await asyncio.open_connection("127.0.0.1", port)
+            writer_v4.close()
+            await writer_v4.wait_closed()
+            print("Conexión IPv4 exitosa.")
+        except ConnectionRefusedError:
+            pytest.fail("La conexión IPv4 fue rechazada.")
+
+        # Probar conexión IPv6
+        try:
+            reader_v6, writer_v6 = await asyncio.open_connection("::1", port)
+            writer_v6.close()
+            await writer_v6.wait_closed()
+            print("Conexión IPv6 exitosa.")
+        except ConnectionRefusedError:
+            pytest.fail("La conexión IPv6 fue rechazada.")
+
+    finally:
+        # Detener el servidor
+        server_task.cancel()
+        try:
+            await server_task
+        except asyncio.CancelledError:
+            pass  # Esperado
+
+
+@patch("src.server.server.asyncio.gather")
+@patch("src.server.server.AsyncResult")
+@patch("src.server.server.process_large_chunk")
+async def test_handle_client_timeout(mock_process_chunk, mock_async_result, mock_gather):
+    """
+    Test que simula un asyncio.TimeoutError durante el polling de Celery.
+    """
+    # Configurar mocks
+    mock_process_chunk.delay.return_value = MagicMock(id="t1")
+    mock_async_result.return_value = MagicMock()
+    
+    # Simular que asyncio.gather nunca termina, lo que causará el timeout
+    # en el asyncio.wait_for que lo envuelve en el código de producción.
+    mock_gather.side_effect = asyncio.TimeoutError("Simulated timeout")
+
+    mock_reader = AsyncMock(spec=asyncio.StreamReader)
+    mock_reader.read.return_value = b"linea 1\nlinea 2"
+    mock_writer = MagicMock(spec=asyncio.StreamWriter)
+    mock_writer.drain = AsyncMock()
+    mock_writer.wait_closed = AsyncMock()
+    mock_writer.get_extra_info.return_value = ("127.0.0.1", 12345)
+
+    # Llamar a la función
+    await handle_client(mock_reader, mock_writer)
+
+    # Verificar que se envió un mensaje de error
+    mock_writer.write.assert_called_once()
+    response_json = json.loads(mock_writer.write.call_args[0][0].decode("utf-8"))
+    assert "error" in response_json
+    assert "Tiempo de espera agotado" in response_json["error"]
+    mock_writer.close.assert_called_once()

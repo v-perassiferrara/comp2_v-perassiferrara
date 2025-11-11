@@ -40,5 +40,5 @@ def consolidate_results(result_queue, total_sub_chunks):
         "users": dict(total_users),
         "hourly_distribution": dict(total_hourly),
         "daily_distribution": dict(total_daily),
-        "top_words": total_words.most_common(10),  # Top 10 palabras más comunes
+        "top_words": dict(total_words.most_common(10)),  # Top 10 palabras más comunes
     }
