@@ -103,7 +103,7 @@ def parse_whatsapp_line(line):
 
 def extract_stats_from_subchunk(lines_list):
     """
-    Función principal de un subproceso llamada por el ProcessPoolExecutor.
+    Función principal de un subproceso llamada por la pool.
     Recibe un sub-chunk (lista de strings) y devuelve un diccionario de estadísticas parciales.
     """
 
