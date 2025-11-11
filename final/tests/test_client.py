@@ -9,10 +9,13 @@ from src.shared.utils import DEFAULT_PORT, DEFAULT_HOST
 
 
 class TestClient(unittest.TestCase):
+    @patch("src.client.client.socket.getaddrinfo")
     @patch("src.client.client.argparse.ArgumentParser")
     @patch("src.client.client.open", new_callable=mock_open, read_data="test data")
     @patch("src.client.client.socket.socket")
-    def test_main_success_ipv4(self, mock_socket, mock_open_func, mock_argparse):
+    def test_main_success_ipv4(
+        self, mock_socket, mock_open_func, mock_argparse, mock_getaddrinfo
+    ):
         """Testea el flujo exitoso del cliente con una conexión IPv4."""
         # Setup de mocks
         mock_args = argparse.Namespace(
@@ -20,10 +23,13 @@ class TestClient(unittest.TestCase):
         )
         mock_argparse.return_value.parse_args.return_value = mock_args
 
+        mock_getaddrinfo.return_value = [
+            (socket.AF_INET, socket.SOCK_STREAM, 6, "", ("127.0.0.1", DEFAULT_PORT))
+        ]
+
         mock_socket_instance = MagicMock()
-        # Asegurarse que recv devuelve una secuencia que termina
         mock_socket_instance.recv.side_effect = [b'{"status": "ok"}', b""]
-        mock_socket.return_value.__enter__.return_value = mock_socket_instance
+        mock_socket.return_value = mock_socket_instance
 
         # Redireccionar stdout para verificar la salida
         with patch("sys.stdout", new_callable=io.StringIO) as mock_stdout:
@@ -31,7 +37,10 @@ class TestClient(unittest.TestCase):
 
         # Verificaciones
         mock_open_func.assert_called_once_with("chat.txt", "r", encoding="utf-8")
-        mock_socket.assert_called_with(socket.AF_INET, socket.SOCK_STREAM)
+        mock_getaddrinfo.assert_called_once_with(
+            "127.0.0.1", DEFAULT_PORT, socket.AF_UNSPEC, socket.SOCK_STREAM
+        )
+        mock_socket.assert_called_with(socket.AF_INET, socket.SOCK_STREAM, 6)
         mock_socket_instance.connect.assert_called_once_with(
             ("127.0.0.1", DEFAULT_PORT)
         )
@@ -40,46 +49,65 @@ class TestClient(unittest.TestCase):
         self.assertIn("Respuesta recibida", mock_stdout.getvalue())
         self.assertIn('"status": "ok"', mock_stdout.getvalue())
 
+    @patch("src.client.client.socket.getaddrinfo")
     @patch("src.client.client.argparse.ArgumentParser")
     @patch("src.client.client.open", new_callable=mock_open, read_data="test data")
     @patch("src.client.client.socket.socket")
-    def test_main_success_ipv6(self, mock_socket, mock_open_func, mock_argparse):
+    def test_main_success_ipv6(
+        self, mock_socket, mock_open_func, mock_argparse, mock_getaddrinfo
+    ):
         """Testea el flujo exitoso con host IPv6."""
         mock_args = argparse.Namespace(
             filepath="chat.txt", host="::1", port=DEFAULT_PORT
         )
         mock_argparse.return_value.parse_args.return_value = mock_args
 
+        mock_getaddrinfo.return_value = [
+            (socket.AF_INET6, socket.SOCK_STREAM, 6, "", ("::1", DEFAULT_PORT))
+        ]
+
         mock_socket_instance = MagicMock()
         mock_socket_instance.recv.side_effect = [b'{"status": "ok"}', b""]
-        mock_socket.return_value.__enter__.return_value = mock_socket_instance
+        mock_socket.return_value = mock_socket_instance
 
         with patch("sys.stdout", new_callable=io.StringIO):
             main()
 
-        mock_socket.assert_called_with(socket.AF_INET6, socket.SOCK_STREAM)
+        mock_getaddrinfo.assert_called_once_with(
+            "::1", DEFAULT_PORT, socket.AF_UNSPEC, socket.SOCK_STREAM
+        )
+        mock_socket.assert_called_with(socket.AF_INET6, socket.SOCK_STREAM, 6)
         mock_socket_instance.connect.assert_called_once_with(("::1", DEFAULT_PORT))
 
+    @patch("src.client.client.socket.getaddrinfo")
     @patch("src.client.client.argparse.ArgumentParser")
     @patch("src.client.client.open", new_callable=mock_open, read_data="test data")
     @patch("src.client.client.socket.socket")
-    def test_main_default_host(self, mock_socket, mock_open_func, mock_argparse):
-        """Testea que el cliente se conecte al host por defecto si no se especifica."""
+    def test_main_default_host(
+        self, mock_socket, mock_open_func, mock_argparse, mock_getaddrinfo
+    ):
+        """Testea que el cliente se conecte a 'localhost' por defecto."""
         mock_args = argparse.Namespace(
             filepath="chat.txt", host=None, port=DEFAULT_PORT
         )
         mock_argparse.return_value.parse_args.return_value = mock_args
 
+        mock_getaddrinfo.return_value = [
+            (socket.AF_INET, socket.SOCK_STREAM, 6, "", ("127.0.0.1", DEFAULT_PORT))
+        ]
+
         mock_socket_instance = MagicMock()
         mock_socket_instance.recv.side_effect = [b'{"status": "ok"}', b""]
-        mock_socket.return_value.__enter__.return_value = mock_socket_instance
+        mock_socket.return_value = mock_socket_instance
 
         with patch("sys.stdout", new_callable=io.StringIO):
             main()
 
-        expected_host = "::1" if ":" in DEFAULT_HOST else "127.0.0.1"
+        mock_getaddrinfo.assert_called_once_with(
+            "localhost", DEFAULT_PORT, socket.AF_UNSPEC, socket.SOCK_STREAM
+        )
         mock_socket_instance.connect.assert_called_once_with(
-            (expected_host, DEFAULT_PORT)
+            ("127.0.0.1", DEFAULT_PORT)
         )
 
     @patch("src.client.client.argparse.ArgumentParser")
@@ -114,19 +142,26 @@ class TestClient(unittest.TestCase):
         self.assertEqual(cm.exception.code, 1)
         self.assertIn("El archivo 'empty.txt' está vacío", mock_stdout.getvalue())
 
+    @patch("src.client.client.socket.getaddrinfo")
     @patch("src.client.client.argparse.ArgumentParser")
     @patch("src.client.client.open", new_callable=mock_open, read_data="test data")
     @patch("src.client.client.socket.socket")
-    def test_main_socket_error(self, mock_socket, mock_open_func, mock_argparse):
+    def test_main_socket_error(
+        self, mock_socket, mock_open_func, mock_argparse, mock_getaddrinfo
+    ):
         """Testea el manejo de un error de conexión de socket."""
         mock_args = argparse.Namespace(
             filepath="chat.txt", host="localhost", port=DEFAULT_PORT
         )
         mock_argparse.return_value.parse_args.return_value = mock_args
 
-        mock_socket.return_value.__enter__.side_effect = socket.error(
-            "Connection refused"
-        )
+        mock_getaddrinfo.return_value = [
+            (socket.AF_INET, socket.SOCK_STREAM, 6, "", ("127.0.0.1", DEFAULT_PORT))
+        ]
+
+        mock_socket_instance = MagicMock()
+        mock_socket_instance.connect.side_effect = socket.error("Connection refused")
+        mock_socket.return_value = mock_socket_instance
 
         with patch("sys.stdout", new_callable=io.StringIO) as mock_stdout:
             with self.assertRaises(SystemExit) as cm:
@@ -135,17 +170,20 @@ class TestClient(unittest.TestCase):
         self.assertEqual(cm.exception.code, 1)
         self.assertIn("Error de Socket", mock_stdout.getvalue())
 
+    @patch("src.client.client.socket.getaddrinfo")
     @patch("src.client.client.argparse.ArgumentParser")
     @patch("src.client.client.open", new_callable=mock_open, read_data="test data")
     @patch("src.client.client.socket.socket")
-    def test_main_unexpected_error(self, mock_socket, mock_open_func, mock_argparse):
-        """Testea el manejo de un error inesperado."""
+    def test_main_unexpected_error(
+        self, mock_socket, mock_open_func, mock_argparse, mock_getaddrinfo
+    ):
+        """Testea el manejo de un error inesperado durante la conexión."""
         mock_args = argparse.Namespace(
             filepath="chat.txt", host="localhost", port=DEFAULT_PORT
         )
         mock_argparse.return_value.parse_args.return_value = mock_args
 
-        mock_socket.return_value.__enter__.side_effect = Exception("Unexpected error")
+        mock_getaddrinfo.side_effect = Exception("Unexpected error")
 
         with patch("sys.stdout", new_callable=io.StringIO) as mock_stdout:
             with self.assertRaises(SystemExit) as cm:
@@ -154,11 +192,12 @@ class TestClient(unittest.TestCase):
         self.assertEqual(cm.exception.code, 1)
         self.assertIn("Ocurrió un error inesperado", mock_stdout.getvalue())
 
+    @patch("src.client.client.socket.getaddrinfo")
     @patch("src.client.client.argparse.ArgumentParser")
     @patch("src.client.client.open", new_callable=mock_open, read_data="test data")
     @patch("src.client.client.socket.socket")
     def test_main_invalid_json_response(
-        self, mock_socket, mock_open_func, mock_argparse
+        self, mock_socket, mock_open_func, mock_argparse, mock_getaddrinfo
     ):
         """Testea el manejo de una respuesta JSON inválida del servidor."""
         mock_args = argparse.Namespace(
@@ -166,9 +205,13 @@ class TestClient(unittest.TestCase):
         )
         mock_argparse.return_value.parse_args.return_value = mock_args
 
+        mock_getaddrinfo.return_value = [
+            (socket.AF_INET, socket.SOCK_STREAM, 6, "", ("127.0.0.1", DEFAULT_PORT))
+        ]
+
         mock_socket_instance = MagicMock()
         mock_socket_instance.recv.side_effect = [b"this is not json", b""]
-        mock_socket.return_value.__enter__.return_value = mock_socket_instance
+        mock_socket.return_value = mock_socket_instance
 
         with patch("sys.stdout", new_callable=io.StringIO) as mock_stdout:
             main()

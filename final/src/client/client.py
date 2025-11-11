@@ -38,15 +38,7 @@ def main():
 
     # Logica para determinar si usar IPv4 o IPv6 cuando no se especifica host
 
-    host = args.host
-
-    if host is None:
-        # Si el DEFAULT_HOST (donde escucha el server) es :: (dual-stack),
-
-        # se conecta a ::1 ("localhost" IPv6)
-        # Si no, a 127.0.0.1 (localhost IPv4)
-
-        host = "::1" if ":" in DEFAULT_HOST else "127.0.0.1"
+    host = args.host if args.host is not None else "localhost"
 
     port = args.port
 
@@ -70,13 +62,41 @@ def main():
         sys.exit(1)
 
     # Conectar al server por TCP y mandar el archivo
+    sock = None
+    last_error = None
     try:
-        # AF_INET6 si el host es IPv6, sino AF_INET (IPv4)
-        family = socket.AF_INET6 if ":" in host else socket.AF_INET
+        addr_info = socket.getaddrinfo(host, port, socket.AF_UNSPEC, socket.SOCK_STREAM)
+        # Esto trae todas las "recetas" (protocolos y direcciones) posibles para conectar al host y puerto indicados
 
-        with socket.socket(family, socket.SOCK_STREAM) as sock:  # Stream => TCP
-            print(f"Conectando a [{host}]:{port}...")
-            sock.connect((host, port))
+        for family, socktype, proto, _, sockaddr in addr_info:
+            try:
+                sock = socket.socket(family, socktype, proto)
+                print(f"Intentando conectar a {sockaddr}...")
+
+                sock.settimeout(5)  # Timeout de 5 segundos
+
+                sock.connect(sockaddr)
+
+                sock.settimeout(None)  # Sin timeout para el resto de operaciones
+
+                print(f"Conexión exitosa a {sockaddr}.")
+                break
+
+            except socket.error as e:  # Si salta error en alguno, lo guardamos y probamos la siguiente direccion
+                last_error = e
+                if sock:
+                    sock.close()
+                sock = None
+                continue
+
+        if sock is None:  # Si el bucle termina sin conexión, lanzamos el ultimo error
+            if last_error:
+                raise last_error
+            else:
+                raise socket.error("No se pudo resolver el host.")
+
+        # Uso with para que el socket se cierre al final
+        with sock:
             start_time = time.time()  # Para medir el tiempo total
 
             # Enviar archivo

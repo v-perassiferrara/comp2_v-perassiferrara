@@ -8,13 +8,13 @@ Utiliza una **arquitectura híbrida**: Celery para distribución entre workers y
 
 ---
 
-## 🚀 Instalación y Ejecución
+## Instalación y Ejecución
 
 Las instrucciones completas para la instalación y el despliegue con Docker se encuentran en: **[INSTALL.md](./INSTALL.md)**
 
 ---
 
-## 💻 Ayuda del Cliente
+## Ayuda del Cliente
 
 El sistema se utiliza a través del `client.py`:
 

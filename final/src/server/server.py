@@ -1,7 +1,7 @@
 import asyncio
 import json
 import time
-import socket  # Importar el módulo socket
+import socket
 from celery.result import AsyncResult
 
 from src.worker.celery_app import app as celery_app
@@ -142,32 +142,63 @@ async def handle_client(reader: asyncio.StreamReader, writer: asyncio.StreamWrit
 
 async def main():
     """
-    Función principal que inicia el servidor asyncio.
+    Función principal que inicia el servidor asyncio, con soporte para dual-stack (IPv4/IPv6).
     """
-    # Creamos el socket a mano para IPv6 (para permitir dual stack)
-    sock = socket.socket(socket.AF_INET6, socket.SOCK_STREAM)
+    listen_sockets = []
 
-    # Desactivar IPV6_V6ONLY para poder aceptar conexiones IPv4 también
-    sock.setsockopt(socket.IPPROTO_IPV6, socket.IPV6_V6ONLY, 0)
+    try:
+        # Para obtener los protocolos disponibles (IPv4, IPv6 o ambos)
+        addr_info = await asyncio.get_event_loop().getaddrinfo(
+            DEFAULT_HOST,
+            DEFAULT_PORT,
+            family=socket.AF_UNSPEC,
+            type=socket.SOCK_STREAM,
+            flags=socket.AI_PASSIVE,  # Socket pasivo (no se conecta a nadie, solo escucha)
+        )
+    except socket.gaierror as e:
+        print(f"[SERVER] Error al obtener información de la dirección: {e}")
+        return
 
-    # Permitir reutilización de dirección para evitar errores
-    sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+    # Creamos un socket segun los protocolos disponibles (uno, otro o ambos)
+    for response in addr_info:
+        family, socktype, proto, _, sockaddr = response
+        try:
+            sock = socket.socket(family, socktype, proto)
+            sock.setsockopt(
+                socket.SOL_SOCKET, socket.SO_REUSEADDR, 1
+            )  # Direccion reusable
 
-    # Bindear a la dirección IPv6 y al puerto
-    sock.bind((DEFAULT_HOST, DEFAULT_PORT))
+            sock.bind(sockaddr)
+            listen_sockets.append(sock)  # Llevamos una lista de los sockets pasivos
 
-    # Pasar el socket pre-configurado a asyncio.start_server
-    server = await asyncio.start_server(
-        handle_client,
-        sock=sock,
-    )
+        except OSError as e:
+            print(f"[SERVER] No se pudo bindear a {sockaddr}: {e}")
+            if sock:
+                sock.close()
+            continue
 
-    addrs = ", ".join(str(sock.getsockname()) for sock in server.sockets)
-    print(f"[SERVER] Escuchando en {addrs} (Puerto {DEFAULT_PORT})...")
+    if not listen_sockets:
+        print("[SERVER] No se pudo crear ningún socket de escucha. Abortando.")
+        return
+
+    servers = []
+    for sock in listen_sockets:
+        server = await asyncio.start_server(
+            handle_client,
+            sock=sock,
+        )
+        servers.append(server)
+
+    # Juntamos todas las direcciones de todos los servidores creados para el print de log
+    all_addrs = []
+    for server in servers:
+        for sock in server.sockets:
+            all_addrs.append(str(sock.getsockname()))
+
+    print(f"[SERVER] Escuchando en {', '.join(all_addrs)}...")
     print("[SERVER] Esperando conexiones...")
 
-    async with server:
-        await server.serve_forever()
+    await asyncio.gather(*(server.serve_forever() for server in servers))
 
 
 if __name__ == "__main__":
