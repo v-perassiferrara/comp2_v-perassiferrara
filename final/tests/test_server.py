@@ -8,27 +8,33 @@ from src.server.server import handle_client
 
 pytestmark = pytest.mark.asyncio
 
+
 @patch("src.server.server.aggregate_final_stats")
 @patch("src.server.server.AsyncResult")
 @patch("src.server.server.process_large_chunk")
 @patch("src.server.server.time")
-@patch("src.server.server.asyncio.sleep", new_callable=AsyncMock)
+@patch("src.server.server.asyncio.to_thread", new_callable=AsyncMock)
 class TestHandleClient:
     async def test_full_flow_with_polling(
-        self, mock_sleep, mock_time, mock_process_chunk, mock_async_result, mock_aggregator
+        self,
+        mock_to_thread,
+        mock_time,
+        mock_process_chunk,
+        mock_async_result,
+        mock_aggregator,
     ):
         # ... (Misma lógica que el test_handle_client_full_flow_with_polling)
         mock_time.time.side_effect = [1000.0, 1010.5]
-        mock_task_1, mock_task_2, mock_task_3 = MagicMock(id="t1"), MagicMock(id="t2"), MagicMock(id="t3")
+        mock_task_1, mock_task_2, mock_task_3 = (
+            MagicMock(id="t1"),
+            MagicMock(id="t2"),
+            MagicMock(id="t3"),
+        )
         mock_process_chunk.delay.side_effect = [mock_task_1, mock_task_2, mock_task_3]
-        mock_result_1, mock_result_2, mock_result_3 = MagicMock(), MagicMock(), MagicMock()
-        mock_result_1.ready.side_effect = [False, True]
-        mock_result_1.get.return_value = {"msg": 1}
-        mock_result_2.ready.side_effect = [False, False, True]
-        mock_result_2.get.return_value = {"msg": 2}
-        mock_result_3.ready.return_value = True
-        mock_result_3.get.return_value = {"msg": 3}
-        mock_async_result.side_effect = [mock_result_1, mock_result_2, mock_result_3]
+
+        # mock_async_result.side_effect is not needed anymore with this approach
+        mock_to_thread.side_effect = [{"msg": 1}, {"msg": 2}, {"msg": 3}]
+
         mock_aggregator.return_value = {"final_messages": 100, "workers_used": 3}
         test_chat_data = b"linea 1\nlinea 2\nlinea 3\nlinea 4\nlinea 5"
         mock_reader = AsyncMock(spec=asyncio.StreamReader)
@@ -41,7 +47,7 @@ class TestHandleClient:
         await handle_client(mock_reader, mock_writer)
 
         assert mock_process_chunk.delay.call_count == 3
-        assert mock_sleep.call_count == 3
+        assert mock_to_thread.call_count == 3
         mock_aggregator.assert_called_once_with([{"msg": 1}, {"msg": 2}, {"msg": 3}])
         mock_writer.write.assert_called_once()
         response_json = json.loads(mock_writer.write.call_args[0][0].decode("utf-8"))
@@ -49,7 +55,12 @@ class TestHandleClient:
         assert response_json["processing_time"] == 10.5
 
     async def test_no_data(
-        self, mock_sleep, mock_time, mock_process_chunk, mock_async_result, mock_aggregator
+        self,
+        mock_to_thread,
+        mock_time,
+        mock_process_chunk,
+        mock_async_result,
+        mock_aggregator,
     ):
         mock_reader = AsyncMock(spec=asyncio.StreamReader)
         mock_reader.read.return_value = b""
@@ -64,7 +75,12 @@ class TestHandleClient:
         mock_writer.wait_closed.assert_called_once()
 
     async def test_empty_file(
-        self, mock_sleep, mock_time, mock_process_chunk, mock_async_result, mock_aggregator
+        self,
+        mock_to_thread,
+        mock_time,
+        mock_process_chunk,
+        mock_async_result,
+        mock_aggregator,
     ):
         mock_reader = AsyncMock(spec=asyncio.StreamReader)
         mock_reader.read.return_value = b"\n \t \n"
@@ -80,11 +96,19 @@ class TestHandleClient:
         mock_writer.close.assert_called_once()
 
     async def test_exception_handling(
-        self, mock_sleep, mock_time, mock_process_chunk, mock_async_result, mock_aggregator
+        self,
+        mock_to_thread,
+        mock_time,
+        mock_process_chunk,
+        mock_async_result,
+        mock_aggregator,
     ):
         mock_time.time.side_effect = [1000.0, 1010.5]
         mock_process_chunk.delay.return_value = MagicMock(id="t1")
-        mock_async_result.return_value = MagicMock(ready=lambda: True, get=lambda: {"msg": 1})
+        # The lambda now accepts a timeout argument
+        mock_async_result.return_value = MagicMock(
+            ready=lambda: True, get=lambda timeout=None: {"msg": 1}
+        )
         mock_aggregator.side_effect = Exception("KABOOM")
         mock_reader = AsyncMock(spec=asyncio.StreamReader)
         mock_reader.read.return_value = b"linea 1\nlinea 2"
@@ -93,15 +117,18 @@ class TestHandleClient:
         mock_writer.wait_closed = AsyncMock()
         mock_writer.get_extra_info.return_value = ("127.0.0.1", 12345)
 
+        # We need to mock to_thread to re-raise the exception
+        mock_to_thread.side_effect = Exception("KABOOM")
+
         await handle_client(mock_reader, mock_writer)
 
-        mock_aggregator.assert_called_once()
+        # The exception happens inside to_thread, so aggregator is not called
+        mock_aggregator.assert_not_called()
         mock_writer.write.assert_called_once()
         response_json = json.loads(mock_writer.write.call_args[0][0].decode("utf-8"))
         assert "error" in response_json
         assert response_json["error"] == "KABOOM"
         mock_writer.close.assert_called_once()
-
 
 
 async def test_server_startup_and_dual_stack():
@@ -113,7 +140,7 @@ async def test_server_startup_and_dual_stack():
 
     # Iniciar el servidor en una tarea de fondo
     server_task = asyncio.create_task(server_main())
-    
+
     # Darle un momento para que arranque
     await asyncio.sleep(0.1)
 
@@ -153,14 +180,16 @@ async def test_server_startup_and_dual_stack():
 @patch("src.server.server.asyncio.gather")
 @patch("src.server.server.AsyncResult")
 @patch("src.server.server.process_large_chunk")
-async def test_handle_client_timeout(mock_process_chunk, mock_async_result, mock_gather):
+async def test_handle_client_timeout(
+    mock_process_chunk, mock_async_result, mock_gather
+):
     """
     Test que simula un asyncio.TimeoutError durante el polling de Celery.
     """
     # Configurar mocks
     mock_process_chunk.delay.return_value = MagicMock(id="t1")
     mock_async_result.return_value = MagicMock()
-    
+
     # Simular que asyncio.gather nunca termina, lo que causará el timeout
     # en el asyncio.wait_for que lo envuelve en el código de producción.
     mock_gather.side_effect = asyncio.TimeoutError("Simulated timeout")

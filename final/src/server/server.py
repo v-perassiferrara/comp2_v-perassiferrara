@@ -21,10 +21,15 @@ POLLING_TIMEOUT = 120  # 2 minutos de espera máxima en total, para evitar que s
 
 
 async def _wait_for_one_task(async_result: AsyncResult):
-    """Espera a que un resultado de Celery esté listo."""
-    while not async_result.ready():
-        await asyncio.sleep(1.0)
-    return async_result.get()
+    """Espera (pasivamente) a que un resultado de Celery esté listo."""
+    try:
+        # Esto es ahora una "espera pasiva" (bloqueante en un hilo separado)
+        result = await asyncio.to_thread(async_result.get, timeout=POLLING_TIMEOUT)
+        return result
+    except Exception as e:
+        # Si el .get() falla (por ej: por timeout de Celery), capturamos el error
+        print(f"[SERVER] Error en un worker: {e}")
+        raise
 
 
 async def handle_client(reader: asyncio.StreamReader, writer: asyncio.StreamWriter):

@@ -33,11 +33,16 @@ def consolidate_results(result_queue, total_sub_chunks):
             print(f"Error consolidando resultado: {e}")
             processed_sub_chunks += 1  # Asegurarse de no quedar en un bucle infinito
 
+    # Filtrar y ordenar usuarios (no incluir números desconocidos, solo empleados)
+    employee_users_counter = Counter(
+        {user: count for user, count in total_users.items() if "+" not in user}
+    )
+
     # Devuelve el diccionario consolidado final
     return {
         "total_messages": total_messages,
         "total_message_length": total_message_length,
-        "users": dict(total_users),
+        "users": dict(employee_users_counter),
         "hourly_distribution": dict(total_hourly),
         "daily_distribution": dict(total_daily),
         "top_words": dict(total_words.most_common(10)),  # Top 10 palabras más comunes

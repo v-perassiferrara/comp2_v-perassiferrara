@@ -59,7 +59,6 @@ def test_process_large_chunk(mock_pool):
     assert result["total_message_length"] == 108
     assert result["users"] == {
         "Julián (Soporte)": 1,
-        "+54 9 11 3987-1951": 1,
     }
     assert result["hourly_distribution"] == {"09": 1, "11": 1}
     assert result["daily_distribution"] == {"Miércoles": 2}

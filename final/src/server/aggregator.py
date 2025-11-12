@@ -39,11 +39,8 @@ def aggregate_final_stats(results_list):
 
     # Mejoras de formato para la salida final
 
-    # Filtrar y ordenar usuarios (no incluir números desconocidos, solo empleados)
-    employee_users_counter = Counter(
-        {user: count for user, count in total_users.items() if "+" not in user}
-    )
-    sorted_employee_users = dict(employee_users_counter.most_common())
+    # Ordenar usuarios por número de mensajes
+    sorted_users = dict(total_users.most_common())
 
     # Ordenar dias de la semana usando la lista como clave
     sorted_daily = dict(
@@ -58,7 +55,7 @@ def aggregate_final_stats(results_list):
     return {
         "total_messages": total_messages,
         "average_message_length": average_length,
-        "users": sorted_employee_users,
+        "users": sorted_users,
         "hourly_distribution": sorted_hourly,  # Versión ordenada
         "daily_distribution": sorted_daily,  # Versión ordenada
         "top_words": dict(total_words.most_common(10)),
