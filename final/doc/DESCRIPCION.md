@@ -33,14 +33,14 @@ Cliente TCP ──→ Servidor asyncio ──→ Redis ──→ 4 Workers Celer
                      ↑                            │ (cada uno con Pool local)
                      │                            │
                      └────── Redis Backend ←──────┘
-                           (polling + agregación)
+                  (espera de resultados + agregación)
 ```
 
 ## Componentes
 
 **Cliente:** argparse + socket TCP → envía archivo → recibe JSON
 
-**Servidor:** asyncio + dual-stack → divide archivo → encola tareas → polling Redis → agrega resultados
+**Servidor:** asyncio + dual-stack → divide archivo → encola tareas → espera resultados de Redis → agrega resultados
 
 **Workers:** Reciben chunk → crean Queue/Value locales → lanzan Pool(4) → sub-procesos parsean regex → consolidan → retornan
 
@@ -81,5 +81,5 @@ Cliente TCP ──→ Servidor asyncio ──→ Redis ──→ 4 Workers Celer
 
 **¿Por qué asyncio en servidor?**
 
-- Servidor es I/O-bound (sockets + polling Redis)
+- Servidor es I/O-bound (sockets + espera de Redis)
 - Workers son CPU-bound (parseo regex en Pool)

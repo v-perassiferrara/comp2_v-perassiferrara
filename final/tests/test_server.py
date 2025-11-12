@@ -15,7 +15,7 @@ pytestmark = pytest.mark.asyncio
 @patch("src.server.server.time")
 @patch("src.server.server.asyncio.to_thread", new_callable=AsyncMock)
 class TestHandleClient:
-    async def test_full_flow_with_polling(
+    async def test_full_flow_with_passive_wait(
         self,
         mock_to_thread,
         mock_time,
@@ -23,7 +23,7 @@ class TestHandleClient:
         mock_async_result,
         mock_aggregator,
     ):
-        # ... (Misma lógica que el test_handle_client_full_flow_with_polling)
+        # ... (Misma lógica que el test_handle_client_full_flow_with_passive_wait)
         mock_time.time.side_effect = [1000.0, 1010.5]
         mock_task_1, mock_task_2, mock_task_3 = (
             MagicMock(id="t1"),
@@ -184,7 +184,7 @@ async def test_handle_client_timeout(
     mock_process_chunk, mock_async_result, mock_gather
 ):
     """
-    Test que simula un asyncio.TimeoutError durante el polling de Celery.
+    Test que simula un asyncio.TimeoutError durante la espera de Celery.
     """
     # Configurar mocks
     mock_process_chunk.delay.return_value = MagicMock(id="t1")

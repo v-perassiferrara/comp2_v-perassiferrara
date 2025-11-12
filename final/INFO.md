@@ -20,7 +20,7 @@ El servidor principal (`server.py`) se construyó con `asyncio` en lugar de un s
 - **Justificación:** El servidor es **I/O-bound** (limitado por E/S), no por CPU. Sus tareas principales son:
   1.  Esperar conexiones de red (`await reader.read()`).
   2.  Esperar los resultados de Celery (`await asyncio.sleep(1.0)`).
-- `asyncio` es la herramienta perfecta para esto. Permite al servidor manejar **cientos de clientes concurrentes** en un solo hilo (el _event loop_), cediendo el control eficientemente durante los tiempos de espera (como el _polling_ de Redis) en lugar de bloquear un hilo por cada cliente.
+- `asyncio` es la herramienta perfecta para esto. Permite al servidor manejar **cientos de clientes concurrentes** en un solo hilo (el _event loop_), cediendo el control eficientemente durante los tiempos de espera en lugar de bloquear un hilo por cada cliente.
 
 ---
 

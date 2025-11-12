@@ -17,14 +17,14 @@ from src.shared.utils import (
 
 # Número de workers/chunks a usar
 NUM_WORKERS = 4
-POLLING_TIMEOUT = 120  # 2 minutos de espera máxima en total, para evitar que se cuelgue
+RESULTS_TIMEOUT = 120  # 2 minutos de espera máxima en total, para evitar que se cuelgue
 
 
 async def _wait_for_one_task(async_result: AsyncResult):
     """Espera (pasivamente) a que un resultado de Celery esté listo."""
     try:
         # Esto es ahora una "espera pasiva" (bloqueante en un hilo separado)
-        result = await asyncio.to_thread(async_result.get, timeout=POLLING_TIMEOUT)
+        result = await asyncio.to_thread(async_result.get, timeout=RESULTS_TIMEOUT)
         return result
     except Exception as e:
         # Si el .get() falla (por ej: por timeout de Celery), capturamos el error
@@ -84,7 +84,7 @@ async def handle_client(reader: asyncio.StreamReader, writer: asyncio.StreamWrit
 
         print(f"[SERVER] Tareas despachadas a Celery: {task_ids}")
 
-        # Polling de resultados con timeout global
+        # Espera de resultados con timeout global
         try:
             # Creamos una lista de corrutinas, una para cada tarea
             waiter_coroutines = [
@@ -93,14 +93,14 @@ async def handle_client(reader: asyncio.StreamReader, writer: asyncio.StreamWrit
             ]
 
             print(
-                f"[SERVER] Esperando {len(waiter_coroutines)} resultados con un timeout de {POLLING_TIMEOUT}s..."
+                f"[SERVER] Esperando {len(waiter_coroutines)} resultados con un timeout de {RESULTS_TIMEOUT}s..."
             )
 
             # asyncio.gather corre todas las corrutinas concurrentemente
 
             # asyncio.wait_for le pone un límite de tiempo a la espera total
             results = await asyncio.wait_for(
-                asyncio.gather(*waiter_coroutines), timeout=POLLING_TIMEOUT
+                asyncio.gather(*waiter_coroutines), timeout=RESULTS_TIMEOUT
             )
             print("[SERVER] Todas las tareas completadas.")
 
@@ -108,7 +108,7 @@ async def handle_client(reader: asyncio.StreamReader, writer: asyncio.StreamWrit
             # Si se agota el tiempo de espera, salta una excepción que será
             # capturada por el manejador de errores principal de la función.
             raise Exception(
-                f"Tiempo de espera agotado ({POLLING_TIMEOUT}s) para recibir la respuesta de los workers."
+                f"Tiempo de espera agotado ({RESULTS_TIMEOUT}s) para recibir la respuesta de los workers."
             )
 
         # Unificar resultados con el agregador
