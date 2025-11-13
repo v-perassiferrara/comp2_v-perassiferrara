@@ -15,4 +15,4 @@ COPY . .
 ENV PYTHONPATH=.
 
 # El comando que corre este contenedor
-CMD ["python", "-m", "src.server.server"]
+CMD ["python", "-u", "-m", "src.server.server"]
