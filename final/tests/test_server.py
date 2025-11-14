@@ -204,9 +204,11 @@ async def test_handle_client_timeout(
     # Llamar a la función
     await handle_client(mock_reader, mock_writer)
 
-    # Verificar que se envió un mensaje de error
+    # Verificar que se envió un mensaje de error estructurado
     mock_writer.write.assert_called_once()
     response_json = json.loads(mock_writer.write.call_args[0][0].decode("utf-8"))
     assert "error" in response_json
-    assert "Tiempo de espera agotado" in response_json["error"]
+    assert "suggestion" in response_json
+    assert "Timeout" in response_json["error"]
+    # El finally block en handle_client se encarga de cerrar el writer
     mock_writer.close.assert_called_once()

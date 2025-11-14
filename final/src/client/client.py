@@ -4,11 +4,7 @@ import json
 import sys
 import time
 
-from src.shared.utils import DEFAULT_HOST, DEFAULT_PORT
-
-
-# Tamaño del buffer para recibir la respuesta
-BUFFER_SIZE = 4096
+from src.shared.utils import DEFAULT_HOST, DEFAULT_PORT, BUFFER_SIZE
 
 
 def main():

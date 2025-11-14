@@ -1,15 +1,5 @@
 from collections import Counter
-
-# Para ordenar los días de la semana
-WEEK_DAYS_ORDER = [
-    "Lunes",
-    "Martes",
-    "Miércoles",
-    "Jueves",
-    "Viernes",
-    "Sábado",
-    "Domingo",
-]
+from src.shared.utils import WEEK_DAYS
 
 
 def aggregate_final_stats(results_list):
@@ -44,7 +34,7 @@ def aggregate_final_stats(results_list):
 
     # Ordenar dias de la semana usando la lista como clave
     sorted_daily = dict(
-        sorted(total_daily.items(), key=lambda item: WEEK_DAYS_ORDER.index(item[0]))
+        sorted(total_daily.items(), key=lambda item: WEEK_DAYS.index(item[0]))
     )
 
     # Ordenar horas del dia

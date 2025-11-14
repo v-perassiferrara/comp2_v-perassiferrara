@@ -2,70 +2,7 @@ import re
 from collections import Counter
 from datetime import datetime
 
-
-# Palabras que no se agregan a la lista de más frecuentes
-STOPWORDS = set(
-    [
-        "de",
-        "la",
-        "que",
-        "el",
-        "en",
-        "y",
-        "a",
-        "los",
-        "del",
-        "con",
-        "un",
-        "una",
-        "por",
-        "para",
-        "no",
-        "se",
-        "mi",
-        "me",
-        "te",
-        "q",
-        "es",
-        "al",
-        "si",
-        "ya",
-        "hola",
-        "buenos",
-        "días",
-        "como",
-        "puedo",
-        "ayudarte",
-        "claro",
-        "dime",
-        "cual",
-        "tu",
-        "le",
-        "<media",
-        "media",
-        "omitted",
-        "omitted>",
-        "link",
-        "importante",
-        "http",
-        "httpss",
-        "www",
-        "eso",
-        "estamos",
-        "cuando",
-        "cada",
-        "te",
-        "necesito",
-        "podés",
-        "tecnosoft",
-        "soporte",
-        "aviso",
-        "cuando",
-        "normalice",
-    ]
-)
-
-WEEK_DAYS = ["Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado", "Domingo"]
+from src.shared.utils import STOPWORDS, WEEK_DAYS
 
 
 def parse_whatsapp_line(line):

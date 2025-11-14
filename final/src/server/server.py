@@ -13,11 +13,9 @@ from src.shared.utils import (
     DEFAULT_HOST,
     DEFAULT_PORT,
     split_list_into_chunks,
+    PROCESSING_WORKERS, # Número de workers (chunks) a usar
+    RESULTS_TIMEOUT, # Timeout global para esperar resultados
 )
-
-# Número de workers/chunks a usar
-NUM_WORKERS = 4
-RESULTS_TIMEOUT = 120  # 2 minutos de espera máxima en total, para evitar que se cuelgue
 
 
 async def _wait_for_one_task(async_result: AsyncResult):
@@ -65,7 +63,7 @@ async def handle_client(reader: asyncio.StreamReader, writer: asyncio.StreamWrit
             return
 
         # Calcular el número de líneas por chunk para obtener el numero de chunks deseado
-        chunk_size = (len(lines) + NUM_WORKERS - 1) // NUM_WORKERS
+        chunk_size = (len(lines) + PROCESSING_WORKERS - 1) // PROCESSING_WORKERS
 
         # Dividir la lista líneas en chunks (listas de listas)
         line_chunks = split_list_into_chunks(lines, chunk_size)
@@ -105,11 +103,15 @@ async def handle_client(reader: asyncio.StreamReader, writer: asyncio.StreamWrit
             print("[SERVER] Todas las tareas completadas.")
 
         except asyncio.TimeoutError:
-            # Si se agota el tiempo de espera, salta una excepción que será
-            # capturada por el manejador de errores principal de la función.
-            raise Exception(
-                f"Tiempo de espera agotado ({RESULTS_TIMEOUT}s) para recibir la respuesta de los workers."
-            )
+            # Si se agota el tiempo de espera, envía una respuesta de error clara al cliente.
+            error_response = {
+                "error": f"Timeout: Los workers no respondieron en {RESULTS_TIMEOUT}s.",
+                "suggestion": "El archivo puede ser demasiado grande o los workers están sobrecargados. Intente nuevamente más tarde o con un archivo más pequeño.",
+            }
+            writer.write(json.dumps(error_response, indent=2, ensure_ascii=False).encode("utf-8")) # Para legibilidad
+            await writer.drain()
+            # Se retorna para evitar que el error sea capturado por el manejador de excepciones general.
+            return
 
         # Unificar resultados con el agregador
 

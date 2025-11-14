@@ -1,6 +1,6 @@
 import multiprocessing
 
-from src.shared.utils import split_list_into_chunks
+from src.shared.utils import split_list_into_chunks, SUB_CHUNK_SIZE, PROCESSING_WORKERS
 from src.worker.celery_app import app
 from src.worker.consolidator import consolidate_results
 from src.worker.parser import extract_stats_from_subchunk
@@ -11,11 +11,6 @@ from src.worker.parser import extract_stats_from_subchunk
 # Esto evita errores de IPC cuando el Pool se crea desde un hilo
 # (worker de Celery con --pool=threads)
 mp_context = multiprocessing.get_context("spawn")
-
-
-# Constantes
-SUB_CHUNK_SIZE = 1000  # Líneas por sub-proceso
-MAX_WORKERS = 4  # Número de procesos en el Pool
 
 
 def _process_sub_chunk_wrapper(sub_chunk_lines, result_queue, processed_counter):
@@ -60,7 +55,7 @@ def process_large_chunk(chunk_data):
         # --- ARREGLO DE COMPATIBILIDAD
         # Crear y usar el Pool de procesos
         # Usamos el Pool del contexto "spawn"
-        with mp_context.Pool(processes=MAX_WORKERS) as pool:
+        with mp_context.Pool(processes=PROCESSING_WORKERS) as pool:
             # Preparamos los argumentos para cada llamada
             # starmap requiere una lista de tuplas: [(arg1, arg2, ...), (arg1, arg2, ...)]
             task_args = []
