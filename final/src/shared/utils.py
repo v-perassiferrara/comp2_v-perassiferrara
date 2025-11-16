@@ -8,7 +8,7 @@ def split_list_into_chunks(data_list: list, chunk_size: int) -> list[list]:
 
 
 # Constantes de Red
-DEFAULT_HOST = "::"
+DEFAULT_HOST = "localhost"
 DEFAULT_PORT = 8888
 BUFFER_SIZE = 4096
 
