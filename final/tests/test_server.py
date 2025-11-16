@@ -10,7 +10,7 @@ pytestmark = pytest.mark.asyncio
 
 
 @patch("src.server.server.aggregate_final_stats")
-@patch("src.server.server.AsyncResult")
+@patch("src.worker.celery_app.app.AsyncResult")  # Corregido para apuntar a la app de celery
 @patch("src.server.server.process_large_chunk")
 @patch("src.server.server.time")
 @patch("src.server.server.asyncio.to_thread", new_callable=AsyncMock)
@@ -178,7 +178,7 @@ async def test_server_startup_and_dual_stack():
 
 
 @patch("src.server.server.asyncio.gather")
-@patch("src.server.server.AsyncResult")
+@patch("src.worker.celery_app.app.AsyncResult")  # Corregido
 @patch("src.server.server.process_large_chunk")
 async def test_handle_client_timeout(
     mock_process_chunk, mock_async_result, mock_gather

@@ -85,8 +85,9 @@ async def handle_client(reader: asyncio.StreamReader, writer: asyncio.StreamWrit
         # Espera de resultados con timeout global
         try:
             # Creamos una lista de corrutinas, una para cada tarea
+            # Usamos celery_app.AsyncResult para asegurar que se use la configuración de la app
             waiter_coroutines = [
-                _wait_for_one_task(AsyncResult(task_id, app=celery_app))
+                _wait_for_one_task(celery_app.AsyncResult(task_id))
                 for task_id in task_ids
             ]
 
@@ -174,6 +175,10 @@ async def main():
             sock.setsockopt(
                 socket.SOL_SOCKET, socket.SO_REUSEADDR, 1
             )  # Direccion reusable
+
+            # Forzar el socket IPv6 a ser solo IPv6
+            if family == socket.AF_INET6:
+                sock.setsockopt(socket.IPPROTO_IPV6, socket.IPV6_V6ONLY, 1)
 
             sock.bind(sockaddr)
             listen_sockets.append(sock)  # Llevamos una lista de los sockets pasivos
