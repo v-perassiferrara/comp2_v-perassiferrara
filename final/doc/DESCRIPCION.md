@@ -9,7 +9,7 @@ Sistema cliente-servidor para análisis de chats de WhatsApp Business exportados
 **Flujo:**
 
 1. Cliente envía archivo .txt vía TCP (IPv4/IPv6)
-2. Servidor asyncio divide en 4 chunks grandes y encola tareas en Redis
+2. Servidor asyncio divide en 4 chunks grandes y despacha tareas a Redis
 3. Workers Celery procesan chunks en paralelo (cada uno usa Pool local de 4 procesos)
 4. Workers consolidan resultados parciales y los guardan en Redis
 5. Servidor agrega resultados finales y responde JSON al cliente
@@ -40,7 +40,7 @@ Cliente TCP ──→ Servidor asyncio ──→ Redis ──→ 4 Workers Celer
 
 **Cliente:** argparse + socket TCP → envía archivo → recibe JSON
 
-**Servidor:** asyncio + dual-stack → divide archivo → encola tareas → espera resultados de Redis → agrega resultados
+**Servidor:** asyncio + dual-stack → divide archivo → despacha tareas → espera resultados de Redis → agrega resultados
 
 **Workers:** Reciben chunk → crean Queue/Value locales → lanzan Pool(4) → sub-procesos parsean regex → consolidan → retornan
 

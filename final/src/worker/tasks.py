@@ -6,7 +6,6 @@ from src.worker.consolidator import consolidate_results
 from src.worker.parser import extract_stats_from_subchunk
 
 
-# --- ARREGLO DE COMPATIBILIDAD
 # Forzamos "spawn": crea un proceso hijo limpio
 # Esto evita errores de IPC cuando el Pool se crea desde un hilo
 # (worker de Celery con --pool=threads)
@@ -44,15 +43,12 @@ def process_large_chunk(chunk_data):
     sub_chunks = split_list_into_chunks(lines, SUB_CHUNK_SIZE)
     num_sub_chunks = len(sub_chunks)
 
-    # --- ARREGLO DE COMPATIBILIDAD
-    # Tuve que revertir a manager para solucionar un problema con Celery
-    # Usamos el Manager del contexto "spawn"
+    # Usamos el Manager del contexto "spawn" para poder compartir queue y value
     with mp_context.Manager() as manager:
         # Queue y Value compartidos entre procesos para contar los sub-chunks procesados y enviar los resultados
         result_queue = manager.Queue()
         processed_counter = manager.Value("i", 0)  # "i" = integer, 0 = valor inicial
 
-        # --- ARREGLO DE COMPATIBILIDAD
         # Crear y usar el Pool de procesos
         # Usamos el Pool del contexto "spawn"
         with mp_context.Pool(processes=PROCESSING_WORKERS) as pool:
@@ -66,9 +62,9 @@ def process_large_chunk(chunk_data):
             # y no continúa hasta que TODAS hayan terminado.
             pool.starmap(_process_sub_chunk_wrapper, task_args)
 
-        # En este punto, TODAS las tareas del pool terminaron y el pool se cerró.
-        # El `processed_counter` está en su valor final.
-        # La `result_queue` está llena con todos los resultados.
+        # En este punto, TODAS las tareas del pool terminaron y el pool se cerro.
+        # El `processed_counter` esta en su valor final.
+        # La `result_queue` esta llena con todos los resultados.
 
         # Una vez que todos los sub-chunks han sido enviados, consolidamos los resultados
         print(f"Consolidando resultados de {num_sub_chunks} sub-chunks...")

@@ -19,14 +19,16 @@ from src.shared.utils import (
 
 
 async def _wait_for_one_task(async_result: AsyncResult):
-    """Espera (pasivamente) a que un resultado de Celery esté listo."""
+    """
+    Espera ("pasivamente") a que un resultado de Celery esté listo.
+    """
     try:
         # Esto es ahora una "espera pasiva" (bloqueante en un hilo separado)
         result = await asyncio.to_thread(async_result.get, timeout=RESULTS_TIMEOUT)
         return result
     except Exception as e:
         # Si el .get() falla (por ej: por timeout de Celery), capturamos el error
-        print(f"[SERVER] Error en un worker: {e}")
+        print(f"Error en un worker: {e}")
         raise
 
 
@@ -37,29 +39,29 @@ async def handle_client(reader: asyncio.StreamReader, writer: asyncio.StreamWrit
     """
 
     addr = writer.get_extra_info("peername")
-    print(f"[SERVER] Cliente conectado desde {addr}")
+    print(f"Cliente conectado desde {addr}")
 
     start_time = time.time()
 
     try:
         # Recibir archivo
 
-        print(f"[SERVER] Esperando datos de {addr}...")
+        print(f"Esperando datos de {addr}...")
 
         # Leer desde el reader hasta EOF (cliente cierra escritura)
         data = await reader.read()
         if not data:
-            print(f"[SERVER] Cliente {addr} no envió datos.")
+            print(f"Cliente {addr} no envió datos.")
             return
 
         full_chat_content = data.decode("utf-8")
-        print(f"[SERVER] Recibidas {len(full_chat_content)} bytes de chat.")
+        print(f"Recibidas {len(full_chat_content)} bytes de chat.")
 
         # Dividir en chunks
 
         lines = full_chat_content.splitlines()
         if not lines:
-            print("[SERVER] El archivo de chat está vacío.")
+            print("El archivo de chat está vacío.")
             return
 
         # Calcular el número de líneas por chunk para obtener el numero de chunks deseado
@@ -71,7 +73,7 @@ async def handle_client(reader: asyncio.StreamReader, writer: asyncio.StreamWrit
         # Unir las líneas de cada chunk de nuevo a un string para mandar a Celery
         large_chunks = ["\n".join(chunk) for chunk in line_chunks]
 
-        print(f"[SERVER] Archivo dividido en {len(large_chunks)} chunks.")
+        print(f"Archivo dividido en {len(large_chunks)} chunks.")
 
         # Despachar tareas a Celery
 
@@ -80,7 +82,7 @@ async def handle_client(reader: asyncio.StreamReader, writer: asyncio.StreamWrit
             task = process_large_chunk.delay(chunk_data_str)  # Manda a Celery
             task_ids.append(task.id)  # Guardamos el ID para seguimiento
 
-        print(f"[SERVER] Tareas despachadas a Celery: {task_ids}")
+        print(f"Tareas despachadas a Celery: {task_ids}")
 
         # Espera de resultados con timeout global
         try:
@@ -92,7 +94,7 @@ async def handle_client(reader: asyncio.StreamReader, writer: asyncio.StreamWrit
             ]
 
             print(
-                f"[SERVER] Esperando {len(waiter_coroutines)} resultados con un timeout de {RESULTS_TIMEOUT}s..."
+                f"Esperando {len(waiter_coroutines)} resultados con un timeout de {RESULTS_TIMEOUT}s..."
             )
 
             # asyncio.gather corre todas las corrutinas concurrentemente
@@ -101,7 +103,7 @@ async def handle_client(reader: asyncio.StreamReader, writer: asyncio.StreamWrit
             results = await asyncio.wait_for(
                 asyncio.gather(*waiter_coroutines), timeout=RESULTS_TIMEOUT
             )
-            print("[SERVER] Todas las tareas completadas.")
+            print("Todas las tareas completadas.")
 
         except asyncio.TimeoutError:
             # Si se agota el tiempo de espera, envía una respuesta de error clara al cliente.
@@ -116,7 +118,7 @@ async def handle_client(reader: asyncio.StreamReader, writer: asyncio.StreamWrit
 
         # Unificar resultados con el agregador
 
-        print("[SERVER] Todos los resultados recibidos. Agregando stats finales...")
+        print("Todos los resultados recibidos. Agregando stats finales...")
         final_stats = aggregate_final_stats(results)
 
         # Agregamos metrica extra de rendimiento (tiempo de procesamiento)
@@ -132,10 +134,10 @@ async def handle_client(reader: asyncio.StreamReader, writer: asyncio.StreamWrit
         writer.write(response_data)
         await writer.drain()
 
-        print(f"[SERVER] Respuesta enviada a {addr}")
+        print(f"Respuesta enviada a {addr}")
 
     except Exception as e:
-        print(f"[SERVER] Error manejando al cliente {addr}: {e}")
+        print(f"Error manejando al cliente {addr}: {e}")
 
         # Si falla, retorna un mensaje de error al cliente
         error_msg = json.dumps({"error": str(e)}).encode("utf-8")
@@ -143,7 +145,7 @@ async def handle_client(reader: asyncio.StreamReader, writer: asyncio.StreamWrit
         await writer.drain()
 
     finally:  # Cerramos la conexión
-        print(f"[SERVER] Cerrando conexión con {addr}")
+        print(f"Cerrando conexión con {addr}")
         writer.close()
         await writer.wait_closed()
 
@@ -164,7 +166,7 @@ async def main():
             flags=socket.AI_PASSIVE,  # Socket pasivo (no se conecta a nadie, solo escucha)
         )
     except socket.gaierror as e:
-        print(f"[SERVER] Error al obtener información de la dirección: {e}")
+        print(f"Error al obtener información de la dirección: {e}")
         return
 
     # Creamos un socket segun los protocolos disponibles (uno, otro o ambos)
@@ -184,13 +186,13 @@ async def main():
             listen_sockets.append(sock)  # Llevamos una lista de los sockets pasivos
 
         except OSError as e:
-            print(f"[SERVER] No se pudo bindear a {sockaddr}: {e}")
+            print(f"No se pudo bindear a {sockaddr}: {e}")
             if sock:
                 sock.close()
             continue
 
     if not listen_sockets:
-        print("[SERVER] No se pudo crear ningún socket de escucha. Abortando.")
+        print("No se pudo crear ningún socket de escucha. Abortando.")
         return
 
     servers = []
@@ -207,8 +209,8 @@ async def main():
         for sock in server.sockets:
             all_addrs.append(str(sock.getsockname()))
 
-    print(f"[SERVER] Escuchando en {', '.join(all_addrs)}...")
-    print("[SERVER] Esperando conexiones...")
+    print(f"Escuchando en {', '.join(all_addrs)}...")
+    print("Esperando conexiones...")
 
     await asyncio.gather(*(server.serve_forever() for server in servers))
 
@@ -217,4 +219,4 @@ if __name__ == "__main__":
     try:
         asyncio.run(main())
     except KeyboardInterrupt:  # Para cerrar con Ctrl+C
-        print("\n[SERVER] Servidor detenido por el usuario.")
+        print("\nServidor detenido por el usuario.")

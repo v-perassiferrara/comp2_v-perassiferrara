@@ -21,7 +21,7 @@ def main():
     parser.add_argument(
         "--host",
         type=str,
-        default=None,  # Usamos 'localhost' o '::1' dependiendo de DEFAULT_HOST
+        default=DEFAULT_HOST,
         help=f"Host del servidor (default: {DEFAULT_HOST})",
     )
     parser.add_argument(
@@ -77,7 +77,7 @@ def main():
 
                 print(f"Conexión exitosa a {sockaddr}.")
                 break
-
+ 
             except socket.error as e:  # Si salta error en alguno, lo guardamos y probamos la siguiente direccion
                 last_error = e
                 if sock:
