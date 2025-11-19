@@ -13,14 +13,12 @@ La decisión principal fue adoptar una arquitectura híbrida en lugar de usar so
 
 ---
 
-## 2. Servidor `asyncio` (Asincronismo I/O)
+## 2. Servidor Híbrido (`asyncio` + Threads)
 
-El servidor principal (`server.py`) se construyó con `asyncio` en lugar de un servidor de _sockets_ tradicional (ej. con hilos).
+El servidor (`server.py`) usa `asyncio` por ser principalmente **I/O-bound** (espera de red y de resultados).
 
-- **Justificación:** El servidor es **I/O-bound** (limitado por E/S), no por CPU. Sus tareas principales son:
-  1.  Esperar conexiones de red (`await reader.read()`).
-  2.  Esperar los resultados de Celery.
-- `asyncio` es la herramienta perfecta para esto. Permite al servidor manejar **cientos de clientes concurrentes** en un solo hilo (el _event loop_), cediendo el control eficientemente durante los tiempos de espera en lugar de bloquear un hilo por cada cliente.
+- **Justificación:** `asyncio` maneja múltiples clientes en un solo hilo. Para no bloquearlo al esperar resultados de Celery (que es una llamada síncrona), se usa `asyncio.to_thread`.
+- **Solución:** Esta función delega la espera bloqueante a un hilo secundario, manteniendo el servidor principal reactivo. Esto crea un sistema híbrido eficiente que combina `asyncio` con `threading`.
 
 ---
 

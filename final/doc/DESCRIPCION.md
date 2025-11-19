@@ -79,7 +79,8 @@ Cliente TCP ──→ Servidor asyncio ──→ Redis ──→ 4 Workers Celer
 - Minimiza overhead de serialización Redis (4 tareas grandes vs 100 pequeñas)
 - Cada worker subdivide localmente para paralelismo CPU
 
-**¿Por qué asyncio en servidor?**
+**¿Por qué híbrido en servidor (`asyncio` + Threads)?**
 
-- Servidor es I/O-bound (sockets + espera de Redis)
-- Workers son CPU-bound (parseo regex en Pool)
+- El servidor es **I/O-bound** (sockets + espera de Redis), por lo que `asyncio` es ideal.
+- Para evitar bloquear el _event loop_ con llamadas síncronas (como `celery_result.get()`), se usa `asyncio.to_thread` para delegar esa espera a un hilo secundario.
+- Esto mantiene el servidor reactivo, combinando lo mejor de `asyncio` y `threading`.
