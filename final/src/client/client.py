@@ -73,7 +73,7 @@ def main():
 
                 sock.connect(sockaddr)
 
-                sock.settimeout(None)  # Sin timeout para el resto de operaciones
+                sock.settimeout(120)  # Timeout de 120 segundos como máximo para respuesta
 
                 print(f"Conexión exitosa a {sockaddr}.")
                 break
